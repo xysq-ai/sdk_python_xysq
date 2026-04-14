@@ -1,69 +1,103 @@
 """Memory namespace — all memory operations."""
 
-from typing import Any
+from __future__ import annotations
 
-from xysq._http import AsyncHTTPClient
-from xysq.models import MemoryItem, ReflectResult
+from typing import TYPE_CHECKING, Any
 
-_BASE = "/api/agent"
+from xysq.types import CaptureResult, MemoryItem, SynthesizeResult
+
+if TYPE_CHECKING:
+    from xysq._http import AsyncHTTPClient
+
+_BASE = "/api/sdk"
 
 
 class MemoryNamespace:
-    def __init__(self, http: AsyncHTTPClient) -> None:
-        self._http = http
+    """Async interface to xysq memory operations."""
 
-    async def retain(
+    def __init__(self, http: AsyncHTTPClient, team_id: str | None = None) -> None:
+        self._http = http
+        self._team_id = team_id
+
+    async def capture(
         self,
         content: str,
         context: str | None = None,
+        tags: list[str] | None = None,
+        significance: str = "normal",
+        scope: str = "permanent",
+        memory_type: str | None = None,
         document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
         timestamp: str | None = None,
-    ) -> None:
-        """Store a memory. Returns immediately; storage happens asynchronously."""
+    ) -> CaptureResult:
+        """Store a memory. Returns processing status and tag feedback."""
         payload: dict[str, Any] = {"content": content}
         if context is not None:
             payload["context"] = context
+        if tags is not None:
+            payload["tags"] = tags
+        if significance != "normal":
+            payload["significance"] = significance
+        if scope != "permanent":
+            payload["scope"] = scope
+        if memory_type is not None:
+            payload["memory_type"] = memory_type
         if document_id is not None:
             payload["document_id"] = document_id
         if metadata is not None:
             payload["metadata"] = metadata
         if timestamp is not None:
             payload["timestamp"] = timestamp
-        await self._http.post(f"{_BASE}/memory/retain", json=payload)
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/memory/retain", json=payload)
+        return CaptureResult.model_validate(data)
 
-    async def recall(
+    async def surface(
         self,
         query: str,
         budget: str = "mid",
         types: list[str] | None = None,
+        intent: str | None = None,
+        domain: str | None = None,
+        scope: str | None = None,
+        memory_type: str | None = None,
         agent_filter: str | None = None,
     ) -> list[MemoryItem]:
         """Retrieve memories relevant to a query."""
         payload: dict[str, Any] = {"query": query, "budget": budget}
         if types is not None:
             payload["types"] = types
+        if intent is not None:
+            payload["intent"] = intent
+        if domain is not None:
+            payload["domain"] = domain
+        if scope is not None:
+            payload["scope"] = scope
+        if memory_type is not None:
+            payload["memory_type"] = memory_type
         if agent_filter is not None:
             payload["agent_filter"] = agent_filter
+        self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/recall", json=payload)
-        return [MemoryItem.model_validate(item) for item in data]
+        return [self._parse_memory(item) for item in data]
 
-    async def reflect(
+    async def synthesize(
         self,
         query: str,
         budget: str = "mid",
         response_schema: dict[str, Any] | None = None,
-    ) -> ReflectResult:
+        write_back: bool = False,
+    ) -> SynthesizeResult:
         """Synthesise an answer from memories."""
         payload: dict[str, Any] = {"query": query, "budget": budget}
         if response_schema is not None:
             payload["response_schema"] = response_schema
+        if write_back:
+            payload["write_back"] = write_back
+        self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/reflect", json=payload)
-        # The provider may return {"answer": ..., ...} — normalise it
-        return ReflectResult(
-            answer=data.get("answer", str(data)),
-            query=query,
-        )
+        return SynthesizeResult.model_validate(data)
 
     async def list(
         self,
@@ -71,13 +105,31 @@ class MemoryNamespace:
         agent_filter: str | None = None,
     ) -> list[MemoryItem]:
         """List recent memories."""
-        params: dict[str, Any] = {"limit": limit}
+        payload: dict[str, Any] = {"limit": limit}
         if agent_filter is not None:
-            params["agent_filter"] = agent_filter
-        data = await self._http.get(f"{_BASE}/memory/list", **params)
-        return [MemoryItem.model_validate(item) for item in data]
+            payload["agent_filter"] = agent_filter
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/memory/list", json=payload)
+        return [self._parse_memory(item) for item in data]
 
-    async def delete(self, memory_id: str) -> int:
-        """Delete a memory. Returns the number of memory units deleted."""
-        data = await self._http.delete(f"{_BASE}/memory/{memory_id}")
-        return data.get("count", 0)
+    async def delete(self, memory_id: str) -> dict:
+        """Delete a memory by ID."""
+        payload: dict[str, Any] = {"memory_id": memory_id}
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/memory/delete", json=payload)
+        return data
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _inject_team(self, payload: dict[str, Any]) -> None:
+        if self._team_id is not None:
+            payload["team_id"] = self._team_id
+
+    @staticmethod
+    def _parse_memory(item: dict[str, Any]) -> MemoryItem:
+        """Map backend response to MemoryItem, handling _source -> source."""
+        if "_source" in item:
+            item = {**item, "source": item.pop("_source")}
+        return MemoryItem.model_validate(item)

@@ -1,0 +1,73 @@
+"""Knowledge namespace — knowledge source operations."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from xysq.types import KnowledgeSource
+
+if TYPE_CHECKING:
+    from xysq._http import AsyncHTTPClient
+
+_BASE = "/api/sdk"
+
+
+class KnowledgeNamespace:
+    """Async interface to xysq knowledge operations."""
+
+    def __init__(self, http: AsyncHTTPClient, team_id: str | None = None) -> None:
+        self._http = http
+        self._team_id = team_id
+
+    async def add(
+        self,
+        type: str,
+        content: str | None = None,
+        url: str | None = None,
+        title: str | None = None,
+        location: str | None = None,
+        session_context: str | None = None,
+        confidence: str = "medium",
+    ) -> KnowledgeSource:
+        """Add a knowledge source."""
+        payload: dict[str, Any] = {"type": type}
+        if content is not None:
+            payload["content"] = content
+        if url is not None:
+            payload["url"] = url
+        if title is not None:
+            payload["title"] = title
+        if location is not None:
+            payload["location"] = location
+        if session_context is not None:
+            payload["session_context"] = session_context
+        if confidence != "medium":
+            payload["confidence"] = confidence
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/knowledge/add", json=payload)
+        return KnowledgeSource.model_validate(data)
+
+    async def list(
+        self,
+        limit: int = 20,
+        offset: int = 0,
+        status: str | None = None,
+        type: str | None = None,
+    ) -> list[KnowledgeSource]:
+        """List knowledge sources."""
+        payload: dict[str, Any] = {"limit": limit, "offset": offset}
+        if status is not None:
+            payload["status"] = status
+        if type is not None:
+            payload["type"] = type
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/knowledge/list", json=payload)
+        return [KnowledgeSource.model_validate(item) for item in data]
+
+    # ------------------------------------------------------------------
+    # Internal helpers
+    # ------------------------------------------------------------------
+
+    def _inject_team(self, payload: dict[str, Any]) -> None:
+        if self._team_id is not None:
+            payload["team_id"] = self._team_id
