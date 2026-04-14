@@ -1,7 +1,8 @@
-"""xysq — Python SDK for the xysq memory API."""
+"""xysq -- Python SDK for the xysq memory API."""
 
 from xysq._client import AsyncXysq
 from xysq._sync_client import Xysq
+from xysq.agent import ContextStrategy, XysqAgent
 from xysq.exceptions import (
     AuthError,
     NotFoundError,
@@ -15,14 +16,16 @@ from xysq.types import CaptureResult, KnowledgeSource, MemoryItem, SynthesizeRes
 __all__ = [
     "AsyncXysq",
     "Xysq",
+    "XysqAgent",
+    "ContextStrategy",
+    "MemoryItem",
+    "SynthesizeResult",
+    "KnowledgeSource",
+    "CaptureResult",
     "XysqError",
     "AuthError",
     "NotFoundError",
     "QuotaError",
     "TimeoutError",
     "RetryError",
-    "MemoryItem",
-    "SynthesizeResult",
-    "KnowledgeSource",
-    "CaptureResult",
 ]
