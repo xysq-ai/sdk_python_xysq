@@ -1,6 +1,5 @@
 # xysq Python SDK
 
-[![PyPI version](https://img.shields.io/pypi/v/xysq.svg?color=00b89a)](https://pypi.org/project/xysq/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-xysq.ai-00b89a)](https://docs.xysq.ai/sdk/getting-started)
@@ -12,15 +11,15 @@ The official Python SDK for [xysq](https://xysq.ai) — a consent-first memory l
 ## Installation
 
 ```bash
-pip install xysq
+pip install git+https://github.com/xysq-ai/sdk_python_xysq.git
 ```
 
 Install optional extras for LiteLLM or Anthropic integrations:
 
 ```bash
-pip install 'xysq[agent]'     # LiteLLM tool-calling + XysqAgent
-pip install 'xysq[claude]'    # Anthropic SDK integration
-pip install 'xysq[all]'       # Everything
+pip install 'xysq[agent] @ git+https://github.com/xysq-ai/sdk_python_xysq.git'
+pip install 'xysq[claude] @ git+https://github.com/xysq-ai/sdk_python_xysq.git'
+pip install 'xysq[all] @ git+https://github.com/xysq-ai/sdk_python_xysq.git'
 ```
 
 **Requires Python 3.11+**
@@ -29,7 +28,7 @@ pip install 'xysq[all]'       # Everything
 
 ## Quickstart
 
-Get an API key at [app.xysq.ai](https://app.xysq.ai/login). Add it to a `.env` file:
+Get an API key at [app.xysq.ai/connect](https://app.xysq.ai/connect). Add it to a `.env` file:
 
 ```
 XYSQ_API_KEY=xysq_...
