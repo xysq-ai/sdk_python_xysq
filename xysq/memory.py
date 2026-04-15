@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from xysq.exceptions import XysqError
 from xysq.types import CaptureResult, MemoryItem, StatusResult, SynthesizeResult
 
 if TYPE_CHECKING:
@@ -51,6 +52,8 @@ class MemoryNamespace:
             payload["timestamp"] = timestamp
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/retain", json=payload)
+        if data.get("status") == "error":
+            raise XysqError(data.get("message", "Unknown error"))
         return CaptureResult.model_validate(data)
 
     async def surface(
@@ -97,6 +100,8 @@ class MemoryNamespace:
             payload["write_back"] = write_back
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/reflect", json=payload)
+        if data.get("status") == "error":
+            raise XysqError(data.get("message", "Unknown error"))
         return SynthesizeResult.model_validate(data)
 
     async def list(

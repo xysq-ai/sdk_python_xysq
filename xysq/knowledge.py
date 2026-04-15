@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from xysq.exceptions import XysqError
 from xysq.types import KnowledgeSource, StatusResult
 
 if TYPE_CHECKING:
@@ -45,6 +46,8 @@ class KnowledgeNamespace:
             payload["confidence"] = confidence
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/knowledge/add", json=payload)
+        if data.get("status") == "error":
+            raise XysqError(data.get("message", "Unknown error"))
         return KnowledgeSource.model_validate(data)
 
     async def list(

@@ -24,16 +24,16 @@ def main() -> None:
         print("=== Adding Knowledge Sources ===")
 
         source = client.knowledge.add(
-            type="url",
+            type="link",
             url="https://docs.python.org/3/library/typing.html",
             title="Python typing module docs",
             session_context="Researching type annotation best practices",
         )
-        print(f"URL source added: id={source.source_id}, status={source.status}")
+        print(f"Link source added: id={source.source_id}, status={source.status}")
 
         # ── 2. Add a code snippet ────────────────────────────────────
         source = client.knowledge.add(
-            type="snippet",
+            type="code",
             content="""\
 def retry(fn, max_attempts=3, backoff=1.0):
     \"\"\"Retry a function with exponential backoff.\"\"\"
@@ -48,11 +48,11 @@ def retry(fn, max_attempts=3, backoff=1.0):
             session_context="Common utility functions we use across projects",
             confidence="high",
         )
-        print(f"Code snippet added: id={source.source_id}, status={source.status}")
+        print(f"Code added: id={source.source_id}, status={source.status}")
 
-        # ── 3. Add a document / quote ────────────────────────────────
+        # ── 3. Add a quote ───────────────────────────────────────────
         source = client.knowledge.add(
-            type="document",
+            type="quote",
             content=(
                 "Architecture Decision Record #12: "
                 "All new services must expose health check endpoints at /healthz. "
@@ -61,7 +61,7 @@ def retry(fn, max_attempts=3, backoff=1.0):
             title="ADR-12: Health Check Standards",
             confidence="high",
         )
-        print(f"Document added: id={source.source_id}, status={source.status}")
+        print(f"Quote added: id={source.source_id}, status={source.status}")
 
         # ── 4. List knowledge sources ────────────────────────────────
         print("\n=== Knowledge Sources ===")
