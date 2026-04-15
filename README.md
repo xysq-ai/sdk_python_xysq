@@ -1,10 +1,103 @@
-# xysq Python SDK
+<div align="center">
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 18 160 215" width="96" height="128" fill="none">
+  <defs><clipPath id="fc"><circle cx="100" cy="140" r="74"/></clipPath></defs>
+  <circle cx="100" cy="140" r="76" fill="#ff6b7a"/>
+  <circle cx="100" cy="64"  r="10"  fill="#ff6b7a"/><circle cx="83"  cy="67"  r="9.5" fill="#ff6b7a"/>
+  <circle cx="67"  cy="75"  r="9"   fill="#ff6b7a"/><circle cx="53"  cy="88"  r="9"   fill="#ff6b7a"/>
+  <circle cx="43"  cy="104" r="9"   fill="#ff6b7a"/><circle cx="37"  cy="122" r="9"   fill="#ff6b7a"/>
+  <circle cx="36"  cy="141" r="9"   fill="#ff6b7a"/><circle cx="39"  cy="160" r="9"   fill="#ff6b7a"/>
+  <circle cx="47"  cy="178" r="9"   fill="#ff6b7a"/><circle cx="59"  cy="193" r="9"   fill="#ff6b7a"/>
+  <circle cx="75"  cy="204" r="9.5" fill="#ff6b7a"/><circle cx="100" cy="210" r="10"  fill="#ff6b7a"/>
+  <circle cx="125" cy="204" r="9.5" fill="#ff6b7a"/><circle cx="141" cy="193" r="9"   fill="#ff6b7a"/>
+  <circle cx="153" cy="178" r="9"   fill="#ff6b7a"/><circle cx="161" cy="160" r="9"   fill="#ff6b7a"/>
+  <circle cx="164" cy="141" r="9"   fill="#ff6b7a"/><circle cx="163" cy="122" r="9"   fill="#ff6b7a"/>
+  <circle cx="157" cy="104" r="9"   fill="#ff6b7a"/><circle cx="147" cy="88"  r="9"   fill="#ff6b7a"/>
+  <circle cx="133" cy="75"  r="9"   fill="#ff6b7a"/><circle cx="117" cy="67"  r="9.5" fill="#ff6b7a"/>
+  <polygon points="100,58 93,68 107,68"    fill="#e85568" opacity="0.75"/>
+  <polygon points="82,62 76,72 89,71"      fill="#e85568" opacity="0.70"/>
+  <polygon points="65,72 60,83 73,81"      fill="#d94a5c" opacity="0.68"/>
+  <polygon points="50,86 46,98 58,95"      fill="#d94a5c" opacity="0.68"/>
+  <polygon points="39,103 37,115 49,112"   fill="#cf4456" opacity="0.65"/>
+  <polygon points="32,122 31,135 43,130"   fill="#cf4456" opacity="0.65"/>
+  <polygon points="30,141 30,154 42,148"   fill="#cf4456" opacity="0.65"/>
+  <polygon points="34,160 36,172 47,166"   fill="#d94a5c" opacity="0.68"/>
+  <polygon points="43,177 48,188 58,181"   fill="#d94a5c" opacity="0.68"/>
+  <polygon points="57,192 64,202 73,194"   fill="#e85568" opacity="0.70"/>
+  <polygon points="76,202 83,211 92,202"   fill="#e85568" opacity="0.72"/>
+  <polygon points="100,207 100,217 108,207" fill="#e85568" opacity="0.72"/>
+  <polygon points="108,202 117,211 124,202" fill="#e85568" opacity="0.72"/>
+  <polygon points="127,194 136,202 143,192" fill="#e85568" opacity="0.70"/>
+  <polygon points="142,181 152,188 157,177" fill="#d94a5c" opacity="0.68"/>
+  <polygon points="153,166 164,172 166,160" fill="#d94a5c" opacity="0.68"/>
+  <polygon points="158,148 170,154 170,141" fill="#cf4456" opacity="0.65"/>
+  <polygon points="151,130 163,135 161,122" fill="#cf4456" opacity="0.65"/>
+  <polygon points="142,108 153,112 151,98"  fill="#cf4456" opacity="0.65"/>
+  <polygon points="127,86 138,90 133,78"    fill="#d94a5c" opacity="0.68"/>
+  <polygon points="111,72 121,75 117,63"    fill="#e85568" opacity="0.70"/>
+  <polygon points="105,82 98,92 112,93"     fill="#e85568" opacity="0.55"/>
+  <polygon points="84,88 77,98 91,97"       fill="#d94a5c" opacity="0.52"/>
+  <polygon points="122,88 115,99 129,98"    fill="#e85568" opacity="0.55"/>
+  <polygon points="68,110 61,121 75,119"    fill="#d94a5c" opacity="0.52"/>
+  <polygon points="74,132 67,143 81,141"    fill="#cf4456" opacity="0.52"/>
+  <polygon points="138,116 131,127 145,125" fill="#e85568" opacity="0.55"/>
+  <polygon points="148,138 141,149 155,147" fill="#d94a5c" opacity="0.52"/>
+  <polygon points="133,160 126,170 140,168" fill="#e85568" opacity="0.55"/>
+  <polygon points="95,160 88,171 102,170"   fill="#d94a5c" opacity="0.52"/>
+  <circle cx="100" cy="140" r="76" fill="none" stroke="white" stroke-width="5"/>
+  <g clip-path="url(#fc)">
+    <g stroke="white" stroke-width="1.5" opacity="0.3" fill="none">
+      <line x1="75"  y1="102" x2="93"  y2="95"/><line x1="93"  y1="95"  x2="114" y2="99"/>
+      <line x1="114" y1="99"  x2="136" y2="106"/><line x1="75"  y1="102" x2="62"  y2="120"/>
+      <line x1="93"  y1="95"  x2="82"  y2="115"/><line x1="82"  y1="115" x2="101" y2="110"/>
+      <line x1="101" y1="110" x2="97"  y2="133"/><line x1="97"  y1="133" x2="117" y2="148"/>
+      <line x1="117" y1="148" x2="151" y2="160"/><line x1="57"  y1="143" x2="67"  y2="165"/>
+      <line x1="67"  y1="165" x2="87"  y2="175"/><line x1="87"  y1="175" x2="101" y2="192"/>
+      <line x1="101" y1="192" x2="120" y2="172"/><line x1="120" y1="172" x2="142" y2="167"/>
+    </g>
+    <g fill="white" opacity="0.65">
+      <circle cx="75"  cy="102" r="4.5"/><circle cx="93"  cy="95"  r="3.5"/>
+      <circle cx="114" cy="99"  r="5"/><circle cx="82"   cy="115" r="4"/>
+      <circle cx="101" cy="110" r="5.5"/><circle cx="97"  cy="133" r="5"/>
+      <circle cx="117" cy="148" r="4.5"/><circle cx="67"  cy="165" r="3.5"/>
+      <circle cx="87"  cy="175" r="4"/><circle cx="101"  cy="192" r="5"/>
+      <circle cx="120" cy="172" r="3.5"/><circle cx="142" cy="167" r="4"/>
+    </g>
+    <g fill="white" opacity="0.35">
+      <circle cx="70"  cy="80"  r="2.5"/><circle cx="88"  cy="76"  r="2"/>
+      <circle cx="122" cy="80"  r="2.5"/><circle cx="143" cy="92"  r="2"/>
+      <circle cx="58"  cy="97"  r="2"/><circle cx="48"   cy="132" r="2.5"/>
+      <circle cx="130" cy="130" r="2.5"/><circle cx="140" cy="148" r="2"/>
+    </g>
+  </g>
+  <path d="M100 66 Q94 54 88 44" stroke="white" stroke-width="5.5" stroke-linecap="round"/>
+  <path d="M88 44 C76 26 40 28 36 56 C32 76 48 96 70 94 C84 92 92 76 88 44Z" fill="#22c4a5" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M88 44 C72 56 56 72 50 88" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.45"/>
+  <path d="M80 51 L74 45 C70 42 64 41 58 42" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M72 61 L66 55 C62 52 56 51 50 52" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M63 73 L57 67 C53 64 47 64 42 66" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M80 51 L84 57 C86 63 84 69 82 73" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M72 61 L76 67 C78 73 76 79 74 83" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M63 73 L67 79 C69 85 67 90 65 93" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M88 44 C98 30 128 24 146 36 C156 44 150 58 134 60 C116 62 96 56 88 44Z" fill="#22c4a5" stroke="white" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M88 44 C110 40 132 34 144 38" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.45"/>
+  <path d="M104 41 C106 35 110 30 116 28" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M104 43 C107 49 112 53 118 55" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M120 38 C122 32 126 28 132 27" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+  <path d="M120 41 C123 47 128 51 134 52" stroke="white" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.35"/>
+</svg>
+
+# xysq.ai python (sdk)
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-xysq.ai-00b89a)](https://docs.xysq.ai/sdk/getting-started)
 
-The official Python SDK for [xysq](https://xysq.ai) — a consent-first memory layer for AI agents. Give your agents persistent memory across sessions, share context across teams, and build agents that remember.
+**The official Python SDK for [xysq.ai](https://xysq.ai)**
+
+A consent-first memory layer for AI agents. Give your agents persistent memory across sessions, share context across teams, and build agents that remember.
+
+</div>
 
 ---
 
