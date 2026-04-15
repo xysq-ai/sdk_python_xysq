@@ -72,7 +72,19 @@ class KnowledgeNamespace:
             payload["type"] = type
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/knowledge/list", json=payload)
-        return [KnowledgeSource.model_validate(item) for item in data]
+        sources = data.get("sources", []) if isinstance(data, dict) else data
+        return [
+            KnowledgeSource(
+                source_id=item.get("source_id", ""),
+                type=item.get("type", ""),
+                title=item.get("title"),
+                status=item.get("status", "pending"),
+                url=item.get("url"),
+                location=item.get("location"),
+                created_at=item.get("added_at", item.get("created_at", "")),
+            )
+            for item in sources
+        ]
 
     async def status(self, source_id: str) -> StatusResult:
         """Check the indexing status of a knowledge source."""
