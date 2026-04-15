@@ -1,18 +1,101 @@
 # xysq SDK — Examples
 
-All examples read credentials from a `.env` file in this directory (or the project root):
-
-```
-XYSQ_API_KEY=xysq_...
-XYSQ_TEAM_ID=...         # required for 03_team_memory.py
-OPENAI_API_KEY=sk-...    # required for 02, 05, 06 (or any other LiteLLM provider key)
-```
-
 Install dependencies:
 
 ```bash
 pip install 'xysq[agent] @ git+https://github.com/xysq-ai/sdk_python_xysq.git'
 ```
+
+Create a `.env` file in this directory (or the project root) and fill in the relevant keys for the examples you want to run:
+
+```
+# xysq — required for all examples
+XYSQ_API_KEY=xysq_...
+
+# xysq — required for team examples (03)
+XYSQ_TEAM_ID=...
+
+# LLM provider — required for 02, 05, 06
+# Set the key for whichever provider you use (see section below)
+OPENAI_API_KEY=sk-...
+```
+
+---
+
+## Using different LLM providers
+
+Examples 02, 05, and 06 use [LiteLLM](https://github.com/BerriAI/litellm), which supports any major provider through a unified interface. You choose your provider by setting two things:
+
+1. **`LITELLM_MODEL`** — the model string to use (read by the example scripts)
+2. **The matching API key env var** — picked up automatically by LiteLLM
+
+LiteLLM identifies the provider from the **`provider/model-name` prefix** in the model string. No other configuration is needed.
+
+### Provider reference
+
+| Provider | API key env var | Example `LITELLM_MODEL` value |
+|---|---|---|
+| **OpenAI** | `OPENAI_API_KEY` | `openai/gpt-4o` |
+| **Anthropic** | `ANTHROPIC_API_KEY` | `anthropic/claude-sonnet-4-20250514` |
+| **Google Gemini** | `GEMINI_API_KEY` | `gemini/gemini-2.0-flash` |
+| **Groq** | `GROQ_API_KEY` | `groq/llama3-8b-8192` |
+| **Mistral** | `MISTRAL_API_KEY` | `mistral/mistral-small-latest` |
+| **Cohere** | `COHERE_API_KEY` | `cohere_chat/command-a-03-2025` |
+| **Azure OpenAI** | `AZURE_API_KEY` + `AZURE_API_BASE` + `AZURE_API_VERSION` | `azure/your-deployment-name` |
+
+### OpenAI (default)
+
+```
+OPENAI_API_KEY=sk-...
+LITELLM_MODEL=openai/gpt-4o
+```
+
+### Anthropic
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+LITELLM_MODEL=anthropic/claude-sonnet-4-20250514
+```
+
+### Google Gemini
+
+Get a key at [aistudio.google.com](https://aistudio.google.com/app/apikey).
+
+```
+GEMINI_API_KEY=...
+LITELLM_MODEL=gemini/gemini-2.0-flash
+```
+
+### Groq
+
+```
+GROQ_API_KEY=gsk_...
+LITELLM_MODEL=groq/llama3-8b-8192
+```
+
+### Mistral
+
+```
+MISTRAL_API_KEY=...
+LITELLM_MODEL=mistral/mistral-small-latest
+```
+
+### Azure OpenAI
+
+Azure requires three extra variables in addition to the model string:
+
+```
+AZURE_API_KEY=...
+AZURE_API_BASE=https://your-resource.openai.azure.com
+AZURE_API_VERSION=2024-02-01
+LITELLM_MODEL=azure/your-deployment-name
+```
+
+---
+
+If `LITELLM_MODEL` is not set, the example scripts default to `gpt-4o-mini` (OpenAI). Just set `OPENAI_API_KEY` and run.
+
+---
 
 ---
 
@@ -48,7 +131,7 @@ python 02_chatbot_with_memory.py
 # Type messages, press Enter. Type 'quit' to exit.
 ```
 
-Requires: `OPENAI_API_KEY` (or set `LITELLM_MODEL` + the matching provider key)
+Requires: an LLM provider key (see [provider reference](#provider-reference) above)
 
 ---
 
@@ -101,7 +184,7 @@ Shows the tool-calling roundtrip: definitions → model call → execute → fee
 python 05_agent_with_tools.py
 ```
 
-Requires: `OPENAI_API_KEY` (or any LiteLLM-compatible provider)
+Requires: an LLM provider key (see [provider reference](#provider-reference) above)
 
 ---
 
@@ -121,4 +204,4 @@ A good reference for building your own `ContextStrategy` implementation.
 python 06_xysq_agent.py
 ```
 
-Requires: `OPENAI_API_KEY` (or set `LITELLM_MODEL` + matching provider key)
+Requires: an LLM provider key (see [provider reference](#provider-reference) above)
