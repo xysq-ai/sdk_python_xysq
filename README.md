@@ -403,30 +403,9 @@ Available tools exposed to the LLM:
 
 ## Examples
 
-All examples load credentials from `.env`:
+Six runnable examples covering everything from basic memory to multi-turn chatbots, team vaults, knowledge indexing, and XysqAgent strategies.
 
-```
-XYSQ_API_KEY=xysq_...
-XYSQ_TEAM_ID=...         # for team examples
-OPENAI_API_KEY=sk-...    # for LiteLLM examples
-```
-
-| File | What it demonstrates |
-|---|---|
-| [`01_basic_memory.py`](examples/01_basic_memory.py) | Capture, surface, synthesize, list — the core loop |
-| [`02_chatbot_with_memory.py`](examples/02_chatbot_with_memory.py) | Multi-turn chatbot with LiteLLM and persistent memory |
-| [`03_team_memory.py`](examples/03_team_memory.py) | Two agents sharing a team vault |
-| [`04_knowledge_base.py`](examples/04_knowledge_base.py) | Indexing links, code snippets, and quotes |
-| [`05_agent_with_tools.py`](examples/05_agent_with_tools.py) | LLM-driven tool-calling loop with xysq tools |
-| [`06_xysq_agent.py`](examples/06_xysq_agent.py) | XysqAgent with surface, synthesize, and custom strategies |
-
-Run any example:
-
-```bash
-cd python_sdk
-pip install 'xysq[agent]'
-python examples/01_basic_memory.py
-```
+See **[examples/README.md](examples/README.md)** for setup instructions and a description of each example.
 
 ---
 
