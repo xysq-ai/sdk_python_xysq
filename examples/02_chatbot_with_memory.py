@@ -7,8 +7,9 @@ context, call the LLM, and capture the exchange.
 
 Setup:
     pip install 'xysq[agent]' litellm
-    export XYSQ_API_KEY=xysq_...
-    export OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
+    Create a .env file with:
+        XYSQ_API_KEY=xysq_...
+        OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
 
 Usage:
     python 02_chatbot_with_memory.py
@@ -18,8 +19,11 @@ Usage:
 import os
 
 import litellm
+from dotenv import load_dotenv
 
 from xysq import Xysq
+
+load_dotenv()
 
 MODEL = os.environ.get("LITELLM_MODEL", "gpt-4o-mini")
 
@@ -44,10 +48,9 @@ def build_system_with_memory(base_prompt: str, memory_text: str) -> str:
 
 
 def main() -> None:
-    api_key = os.environ["XYSQ_API_KEY"]
     history: list[dict[str, str]] = []
 
-    with Xysq(api_key=api_key) as client:
+    with Xysq() as client:
         print("=== xysq Memory Chatbot ===")
         print(f"Model: {MODEL}")
         print("Type 'quit' or 'exit' to stop.\n")

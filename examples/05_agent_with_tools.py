@@ -7,16 +7,20 @@ the first teaches a preference, the second tests recall.
 
 Setup:
     pip install 'xysq[agent]' litellm
-    export XYSQ_API_KEY=xysq_...
-    export OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
+    Create a .env file with:
+        XYSQ_API_KEY=xysq_...
+        OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
 """
 
 import os
 
 import litellm
+from dotenv import load_dotenv
 
 from xysq import Xysq
 from xysq.integrations.litellm import XysqLiteLLMTools
+
+load_dotenv()
 
 MODEL = os.environ.get("LITELLM_MODEL", "gpt-4o-mini")
 MAX_TOOL_ROUNDS = 10
@@ -70,9 +74,7 @@ def run_turn(
 
 
 def main() -> None:
-    api_key = os.environ["XYSQ_API_KEY"]
-
-    with Xysq(api_key=api_key) as client:
+    with Xysq() as client:
         tools = XysqLiteLLMTools(client)
 
         # ── Turn 1: Teach a preference ───────────────────────────────

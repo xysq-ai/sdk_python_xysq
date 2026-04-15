@@ -8,14 +8,19 @@ Demonstrates XysqAgent with three different context strategies:
 
 Setup:
     pip install 'xysq[agent]' litellm
-    export XYSQ_API_KEY=xysq_...
-    export OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
+    Create a .env file with:
+        XYSQ_API_KEY=xysq_...
+        OPENAI_API_KEY=sk-...        # or ANTHROPIC_API_KEY, etc.
 """
 
 import os
 from typing import Any
 
+from dotenv import load_dotenv
+
 from xysq import ContextStrategy, Xysq, XysqAgent
+
+load_dotenv()
 
 MODEL = os.environ.get("LITELLM_MODEL", "gpt-4o-mini")
 LLM_API_KEY = os.environ.get("OPENAI_API_KEY", os.environ.get("ANTHROPIC_API_KEY", ""))
@@ -131,9 +136,7 @@ def session_3_custom(client: Xysq) -> None:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    api_key = os.environ["XYSQ_API_KEY"]
-
-    with Xysq(api_key=api_key) as client:
+    with Xysq() as client:
         session_1_surface(client)
         session_2_synthesize(client)
         session_3_custom(client)

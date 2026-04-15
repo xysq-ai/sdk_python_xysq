@@ -7,21 +7,25 @@ the same team-scoped client.
 
 Setup:
     pip install xysq
-    export XYSQ_API_KEY=xysq_...
-    export XYSQ_TEAM_ID=team_...
+    Create a .env file with:
+        XYSQ_API_KEY=xysq_...
+        XYSQ_TEAM_ID=team_...
 """
 
 import os
 import time
 
+from dotenv import load_dotenv
+
 from xysq import Xysq
+
+load_dotenv()
 
 
 def main() -> None:
-    api_key = os.environ["XYSQ_API_KEY"]
     team_id = os.environ["XYSQ_TEAM_ID"]
 
-    with Xysq(api_key=api_key) as client:
+    with Xysq() as client:
         team = client.team(team_id)
 
         # ── Agent 1: Capture team decisions ──────────────────────────

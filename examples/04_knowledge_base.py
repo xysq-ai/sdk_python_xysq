@@ -6,19 +6,20 @@ list them, then surface from memory to show knowledge integration.
 
 Setup:
     pip install xysq
-    export XYSQ_API_KEY=xysq_...
+    Create a .env file with: XYSQ_API_KEY=xysq_...
 """
 
-import os
 import time
+
+from dotenv import load_dotenv
 
 from xysq import Xysq
 
+load_dotenv()
+
 
 def main() -> None:
-    api_key = os.environ["XYSQ_API_KEY"]
-
-    with Xysq(api_key=api_key) as client:
+    with Xysq() as client:
         # ── 1. Add a URL source ──────────────────────────────────────
         print("=== Adding Knowledge Sources ===")
 
