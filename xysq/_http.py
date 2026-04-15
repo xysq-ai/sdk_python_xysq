@@ -35,7 +35,7 @@ class AsyncHTTPClient:
         self,
         api_key: str,
         base_url: str,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
         max_retries: int = 3,
     ) -> None:
         self._base_url = base_url.rstrip("/")

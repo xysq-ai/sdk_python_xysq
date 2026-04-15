@@ -193,7 +193,7 @@ class Xysq:
     def __init__(
         self,
         api_key: str | None = None,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
         max_retries: int = 3,
     ) -> None:
         self._loop = asyncio.new_event_loop()

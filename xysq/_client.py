@@ -28,7 +28,7 @@ class AsyncXysq:
     def __init__(
         self,
         api_key: str | None = None,
-        timeout: float = 30.0,
+        timeout: float = 60.0,
         max_retries: int = 3,
     ) -> None:
         key = resolve_api_key(api_key)
