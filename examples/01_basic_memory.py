@@ -28,7 +28,7 @@ def main() -> None:
             context="Code review session",
             tags=["python", "coding-style"],
         )
-        print(f"Captured: status={result.status}, tags={result.tags_applied}")
+        print(f"Captured: status={result.status}, tags={result.applied_tags}")
 
         result = client.memory.capture(
             content="User likes dark mode across all editors and terminals",
@@ -36,14 +36,14 @@ def main() -> None:
             tags=["preferences", "editor"],
             significance="high",
         )
-        print(f"Captured: status={result.status}, tags={result.tags_applied}")
+        print(f"Captured: status={result.status}, tags={result.applied_tags}")
 
         result = client.memory.capture(
             content="Project deadline is end of Q2 2026",
             context="Sprint planning",
             tags=["project", "deadline"],
         )
-        print(f"Captured: status={result.status}, tags={result.tags_applied}")
+        print(f"Captured: status={result.status}, tags={result.applied_tags}")
 
         # Give the backend a moment to index
         time.sleep(2)

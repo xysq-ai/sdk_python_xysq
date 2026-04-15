@@ -30,6 +30,7 @@ class AsyncXysq:
         api_key: str | None = None,
         timeout: float = 60.0,
         max_retries: int = 3,
+        agent_name: str | None = None,
     ) -> None:
         key = resolve_api_key(api_key)
         base_url = resolve_base_url()
@@ -38,6 +39,7 @@ class AsyncXysq:
             base_url=base_url,
             timeout=timeout,
             max_retries=max_retries,
+            agent_name=agent_name,
         )
         self.memory = MemoryNamespace(self._http)
         self.knowledge = KnowledgeNamespace(self._http)

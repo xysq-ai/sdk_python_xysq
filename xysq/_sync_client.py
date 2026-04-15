@@ -109,6 +109,9 @@ class _SyncMemory:
     def delete(self, memory_id: str) -> dict:
         return self._run(self._ns.delete(memory_id))
 
+    def tags(self) -> dict:
+        return self._run(self._ns.tags())
+
     def status(self, memory_id: str) -> StatusResult:
         return self._run(self._ns.status(memory_id))
 
@@ -195,6 +198,7 @@ class Xysq:
         api_key: str | None = None,
         timeout: float = 60.0,
         max_retries: int = 3,
+        agent_name: str | None = None,
     ) -> None:
         self._loop = asyncio.new_event_loop()
         self._thread = threading.Thread(
@@ -203,7 +207,8 @@ class Xysq:
         self._thread.start()
 
         self._async_client = AsyncXysq(
-            api_key=api_key, timeout=timeout, max_retries=max_retries
+            api_key=api_key, timeout=timeout, max_retries=max_retries,
+            agent_name=agent_name,
         )
         self.memory = _SyncMemory(self._async_client.memory, self._loop)
         self.knowledge = _SyncKnowledge(self._async_client.knowledge, self._loop)

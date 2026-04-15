@@ -131,6 +131,12 @@ class MemoryNamespace:
         data = await self._http.post(f"{_BASE}/memory/status", json=payload)
         return StatusResult.model_validate(data)
 
+    async def tags(self) -> dict:
+        """Fetch the valid tag taxonomy for memory capture."""
+        payload: dict[str, Any] = {}
+        self._inject_team(payload)
+        return await self._http.post(f"{_BASE}/memory/tags", json=payload)
+
     async def wait(
         self,
         memory_id: str,

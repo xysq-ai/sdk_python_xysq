@@ -37,15 +37,19 @@ class AsyncHTTPClient:
         base_url: str,
         timeout: float = 60.0,
         max_retries: int = 3,
+        agent_name: str | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._max_retries = max_retries
+        headers: dict[str, str] = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        if agent_name:
+            headers["X-Agent-Name"] = agent_name
         self._client = httpx.AsyncClient(
             base_url=self._base_url,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-            },
+            headers=headers,
             timeout=timeout,
         )
 

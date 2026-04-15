@@ -474,6 +474,14 @@ Full documentation at **[docs.xysq.ai](https://docs.xysq.ai)**:
 
 ---
 
+## Community
+
+Building something with xysq? We'd love to see it. The **[community/](community/)** folder is where contributors share agents, integrations, tools, and use cases built on top of the SDK.
+
+Check out the [contribution guide](community/README.md) to submit your project.
+
+---
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

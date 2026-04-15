@@ -34,14 +34,18 @@ class KnowledgeSource(BaseModel):
     status: str = "pending"
     url: str | None = None
     location: str | None = None
-    created_at: str = ""
+    confidence: str = "medium"
+    auto_detected: bool = False
+    preview: str | None = None
+    added_at: str | None = None
 
 
 class CaptureResult(BaseModel):
     status: str = "processing"
     memory_id: str = ""
-    tags_applied: list[str] = []
-    tags_dropped: list[str] = []
+    applied_tags: list[str] = []
+    dropped_tags: list[str] = []
+    available_tags: list[str] = []
 
 
 class StatusResult(BaseModel):
