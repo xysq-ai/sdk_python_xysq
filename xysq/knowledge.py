@@ -48,7 +48,14 @@ class KnowledgeNamespace:
         data = await self._http.post(f"{_BASE}/knowledge/add", json=payload)
         if data.get("status") == "error":
             raise XysqError(data.get("message", "Unknown error"))
-        return KnowledgeSource.model_validate(data)
+        return KnowledgeSource(
+            source_id=data.get("source_id", ""),
+            type=type,
+            title=title,
+            status=data.get("status", "pending"),
+            url=url,
+            location=location,
+        )
 
     async def list(
         self,
