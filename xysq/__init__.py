@@ -1,17 +1,32 @@
-"""xysq — Python SDK for the xysq memory API."""
+"""xysq -- Python SDK for the xysq memory API."""
 
-from xysq.agent import XysqAgent
-from xysq.client import XysqClient
-from xysq.exceptions import AuthError, NotFoundError, QuotaError, XysqError
-from xysq.models import MemoryItem, ReflectResult
+from xysq._client import AsyncXysq
+from xysq._sync_client import Xysq
+from xysq.agent import ContextStrategy, XysqAgent
+from xysq.exceptions import (
+    AuthError,
+    NotFoundError,
+    QuotaError,
+    RetryError,
+    TimeoutError,
+    XysqError,
+)
+from xysq.types import CaptureResult, KnowledgeSource, MemoryItem, StatusResult, SynthesizeResult
 
 __all__ = [
-    "XysqClient",
+    "AsyncXysq",
+    "Xysq",
     "XysqAgent",
+    "ContextStrategy",
+    "MemoryItem",
+    "SynthesizeResult",
+    "KnowledgeSource",
+    "CaptureResult",
+    "StatusResult",
     "XysqError",
     "AuthError",
-    "QuotaError",
     "NotFoundError",
-    "MemoryItem",
-    "ReflectResult",
+    "QuotaError",
+    "TimeoutError",
+    "RetryError",
 ]

@@ -1,18 +1,27 @@
-class XysqError(Exception):
-    """Base exception for all xysq SDK errors."""
+"""Exception hierarchy for the xysq SDK."""
 
+
+class XysqError(Exception):
     def __init__(self, message: str, status_code: int | None = None) -> None:
         super().__init__(message)
         self.status_code = status_code
 
 
 class AuthError(XysqError):
-    """Raised when the API key is invalid or missing (HTTP 401)."""
-
-
-class QuotaError(XysqError):
-    """Raised when the user's memory limit has been reached (HTTP 429)."""
+    """401 or missing API key."""
 
 
 class NotFoundError(XysqError):
-    """Raised when a requested resource does not exist (HTTP 404)."""
+    """404."""
+
+
+class QuotaError(XysqError):
+    """429 rate limit/quota."""
+
+
+class TimeoutError(XysqError):
+    """Request timed out."""
+
+
+class RetryError(XysqError):
+    """All retries exhausted."""
