@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from xysq.types import KnowledgeSource
+from xysq.types import KnowledgeSource, StatusResult
 
 if TYPE_CHECKING:
     from xysq._http import AsyncHTTPClient
@@ -63,6 +63,31 @@ class KnowledgeNamespace:
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/knowledge/list", json=payload)
         return [KnowledgeSource.model_validate(item) for item in data]
+
+    async def status(self, source_id: str) -> StatusResult:
+        """Check the indexing status of a knowledge source."""
+        payload: dict[str, Any] = {"source_id": source_id}
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/knowledge/status", json=payload)
+        return StatusResult.model_validate(data)
+
+    async def wait(
+        self,
+        source_id: str,
+        timeout: float = 30.0,
+        interval: float = 0.5,
+    ) -> StatusResult:
+        """Poll until source reaches a terminal status (indexed/failed) or timeout."""
+        import asyncio
+
+        deadline = asyncio.get_event_loop().time() + timeout
+        while True:
+            result = await self.status(source_id)
+            if result.status in ("indexed", "failed", "not_found"):
+                return result
+            if asyncio.get_event_loop().time() >= deadline:
+                return result  # return last status on timeout
+            await asyncio.sleep(interval)
 
     # ------------------------------------------------------------------
     # Internal helpers

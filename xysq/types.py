@@ -39,5 +39,13 @@ class KnowledgeSource(BaseModel):
 
 class CaptureResult(BaseModel):
     status: str = "processing"
+    memory_id: str = ""
     tags_applied: list[str] = []
     tags_dropped: list[str] = []
+
+
+class StatusResult(BaseModel):
+    status: str  # pending | processing | completed | failed | indexed | not_found
+    memory_id: str | None = None
+    source_id: str | None = None
+    error_msg: str | None = None

@@ -14,7 +14,7 @@ from xysq._client import AsyncXysq
 from xysq._team import TeamScope
 from xysq.knowledge import KnowledgeNamespace
 from xysq.memory import MemoryNamespace
-from xysq.types import CaptureResult, KnowledgeSource, MemoryItem, SynthesizeResult
+from xysq.types import CaptureResult, KnowledgeSource, MemoryItem, StatusResult, SynthesizeResult
 
 
 def _start_loop(loop: asyncio.AbstractEventLoop) -> None:
@@ -109,6 +109,12 @@ class _SyncMemory:
     def delete(self, memory_id: str) -> dict:
         return self._run(self._ns.delete(memory_id))
 
+    def status(self, memory_id: str) -> StatusResult:
+        return self._run(self._ns.status(memory_id))
+
+    def wait(self, memory_id: str, timeout: float = 30.0, interval: float = 0.5) -> StatusResult:
+        return self._run(self._ns.wait(memory_id, timeout=timeout, interval=interval))
+
 
 class _SyncKnowledge:
     """Sync wrapper around KnowledgeNamespace."""
@@ -152,6 +158,12 @@ class _SyncKnowledge:
         return self._run(
             self._ns.list(limit=limit, offset=offset, status=status, type=type)
         )
+
+    def status(self, source_id: str) -> StatusResult:
+        return self._run(self._ns.status(source_id))
+
+    def wait(self, source_id: str, timeout: float = 30.0, interval: float = 0.5) -> StatusResult:
+        return self._run(self._ns.wait(source_id, timeout=timeout, interval=interval))
 
 
 class _SyncTeamScope:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from xysq.types import CaptureResult, MemoryItem, SynthesizeResult
+from xysq.types import CaptureResult, MemoryItem, StatusResult, SynthesizeResult
 
 if TYPE_CHECKING:
     from xysq._http import AsyncHTTPClient
@@ -118,6 +118,31 @@ class MemoryNamespace:
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/delete", json=payload)
         return data
+
+    async def status(self, memory_id: str) -> StatusResult:
+        """Check the indexing status of a memory."""
+        payload: dict[str, Any] = {"memory_id": memory_id}
+        self._inject_team(payload)
+        data = await self._http.post(f"{_BASE}/memory/status", json=payload)
+        return StatusResult.model_validate(data)
+
+    async def wait(
+        self,
+        memory_id: str,
+        timeout: float = 30.0,
+        interval: float = 0.5,
+    ) -> StatusResult:
+        """Poll until memory reaches a terminal status (completed/failed) or timeout."""
+        import asyncio
+
+        deadline = asyncio.get_event_loop().time() + timeout
+        while True:
+            result = await self.status(memory_id)
+            if result.status in ("completed", "failed", "not_found"):
+                return result
+            if asyncio.get_event_loop().time() >= deadline:
+                return result  # return last status on timeout
+            await asyncio.sleep(interval)
 
     # ------------------------------------------------------------------
     # Internal helpers
