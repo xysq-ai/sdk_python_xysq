@@ -27,7 +27,6 @@ class MemoryNamespace:
         tags: list[str] | None = None,
         significance: str = "normal",
         scope: str = "permanent",
-        memory_type: str | None = None,
         document_id: str | None = None,
         metadata: dict[str, Any] | None = None,
         timestamp: str | None = None,
@@ -42,8 +41,6 @@ class MemoryNamespace:
             payload["significance"] = significance
         if scope != "permanent":
             payload["scope"] = scope
-        if memory_type is not None:
-            payload["memory_type"] = memory_type
         if document_id is not None:
             payload["document_id"] = document_id
         if metadata is not None:
@@ -65,8 +62,8 @@ class MemoryNamespace:
         types: list[str] | None = None,
         intent: str | None = None,
         domain: str | None = None,
+        mood: str | None = None,
         scope: str | None = None,
-        memory_type: str | None = None,
         agent_filter: str | None = None,
     ) -> list[MemoryItem]:
         """Retrieve memories relevant to a query."""
@@ -77,10 +74,10 @@ class MemoryNamespace:
             payload["intent"] = intent
         if domain is not None:
             payload["domain"] = domain
+        if mood is not None:
+            payload["mood"] = mood
         if scope is not None:
             payload["scope"] = scope
-        if memory_type is not None:
-            payload["memory_type"] = memory_type
         if agent_filter is not None:
             payload["agent_filter"] = agent_filter
         self._inject_team(payload)

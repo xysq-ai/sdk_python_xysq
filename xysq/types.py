@@ -53,3 +53,37 @@ class StatusResult(BaseModel):
     memory_id: str | None = None
     source_id: str | None = None
     error_msg: str | None = None
+
+
+class Folder(BaseModel):
+    """A folder in the user's (or a team's) Organise vault."""
+
+    id: str
+    name: str
+    parent_id: str | None = None  # None for the vault root
+    path: str | None = None
+    is_system: bool = False
+    chat_id: str | None = None
+    owner_kind: str | None = None  # "user" | "team"
+    owner_id: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class OrganiseFile(BaseModel):
+    """An uploaded file in the Organise vault, returned by ``upload_file``."""
+
+    asset_id: str
+    filename: str
+    folder_id: str
+    mime_type: str
+    size_bytes: int
+    extraction_status: str  # pending | processing | ready | failed
+
+
+class FileStatus(BaseModel):
+    """Polled status of an uploaded file's extraction."""
+
+    asset_id: str
+    extraction_status: str  # pending | processing | ready | failed
+    error_msg: str | None = None

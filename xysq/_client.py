@@ -7,6 +7,7 @@ from xysq._http import AsyncHTTPClient
 from xysq._team import TeamScope
 from xysq.knowledge import KnowledgeNamespace
 from xysq.memory import MemoryNamespace
+from xysq.organise import OrganiseNamespace
 
 
 class AsyncXysq:
@@ -43,6 +44,7 @@ class AsyncXysq:
         )
         self.memory = MemoryNamespace(self._http)
         self.knowledge = KnowledgeNamespace(self._http)
+        self.organise = OrganiseNamespace(self._http)
 
     def team(self, team_id: str) -> TeamScope:
         """Return a team-scoped view with auto team_id injection."""

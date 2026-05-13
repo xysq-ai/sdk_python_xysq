@@ -11,7 +11,16 @@ from xysq.exceptions import (
     TimeoutError,
     XysqError,
 )
-from xysq.types import CaptureResult, KnowledgeSource, MemoryItem, StatusResult, SynthesizeResult
+from xysq.types import (
+    CaptureResult,
+    FileStatus,
+    Folder,
+    KnowledgeSource,
+    MemoryItem,
+    OrganiseFile,
+    StatusResult,
+    SynthesizeResult,
+)
 
 __all__ = [
     "AsyncXysq",
@@ -23,6 +32,9 @@ __all__ = [
     "KnowledgeSource",
     "CaptureResult",
     "StatusResult",
+    "Folder",
+    "OrganiseFile",
+    "FileStatus",
     "XysqError",
     "AuthError",
     "NotFoundError",

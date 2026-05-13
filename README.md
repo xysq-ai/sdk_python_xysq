@@ -114,7 +114,7 @@ from xysq import Xysq
 client = Xysq()  # reads XYSQ_API_KEY from env
 ```
 
-#### `client.memory.capture(content, *, context, tags, significance, scope, memory_type, document_id, metadata, timestamp)`
+#### `client.memory.capture(content, *, context, tags, significance, scope, document_id, metadata, timestamp)`
 
 Store a memory.
 
@@ -130,7 +130,7 @@ print(result.memory_id)  # unique ID for this memory
 print(result.status)     # "pending" | "processing" | "completed"
 ```
 
-#### `client.memory.surface(query, *, budget, types, intent, domain, scope, memory_type, agent_filter)`
+#### `client.memory.surface(query, *, budget, types, intent, domain, scope, agent_filter)`
 
 Retrieve the most relevant memories for a query.
 
@@ -235,6 +235,47 @@ Once indexed, knowledge sources are automatically surfaced through `memory.surfa
 
 ---
 
+### Organise — Folders & File Uploads
+
+Organise the user's documents (Markdown notes, PDFs, CSVs, images, JSON, plain text) into a folder tree. Uploaded files are extracted and indexed so their content surfaces through `memory.surface()` and `memory.synthesize()` automatically.
+
+```python
+# Inspect the folder tree
+folders = client.organise.list_folders()
+
+# Create a folder under the vault root (omit parent_id) or under another folder
+notes = client.organise.create_folder("notes")
+
+# Upload a file from disk — MIME and filename are inferred from the path
+file = client.organise.upload_file("meeting-notes.md", folder_id=notes.id)
+
+# Or pass in-memory bytes / text
+file = client.organise.upload_file(
+    content="# Decision\n\nWe're going with Postgres for the auth service.",
+    filename="decision.md",
+    mime_type="text/markdown",
+    folder_id=notes.id,
+)
+
+# Wait until extraction finishes so the content enters recall
+status = client.organise.wait_for_file(file.asset_id, timeout=60.0)
+print(status.extraction_status)  # "ready" | "failed" | "processing"
+
+# Rename, move, delete (delete is irreversible — cascades into subfolders + files)
+client.organise.rename_folder(notes.id, "agent-notes")
+client.organise.move_folder(notes.id, new_parent_id=other_folder.id)
+deleted = client.organise.delete_folder(notes.id, forget_memories=True)
+```
+
+**Limits & allowed types:**
+- 10 MB per file (rejected client-side before the bytes leave your process).
+- Allowed MIME types: `text/markdown`, `text/plain`, `application/pdf`, `application/json`, `text/csv`, `image/*`. Anything else returns `415`.
+- Filenames collide gracefully — duplicate uploads get a `" (2)"`, `" (3)"`, … suffix; use `file.filename` to get the resolved name.
+
+The system `/Chats/` folder is reserved for chat-session uploads and rejects direct uses through this API.
+
+---
+
 ### Team Vaults
 
 Share memory and knowledge across your entire team. Every team member and every agent they use reads from and writes to the same vault.
@@ -262,6 +303,10 @@ team.knowledge.add(
     content="Sprint cadence: 2 weeks. Retros every other Friday.",
     title="Team Process — Sprint Cadence",
 )
+
+# Team Organise works the same way — folders, uploads, the lot
+specs = team.organise.create_folder("specs")
+team.organise.upload_file("auth-rfc.md", folder_id=specs.id)
 
 # Synthesize from team context
 result = team.memory.synthesize("What are our engineering standards?")
