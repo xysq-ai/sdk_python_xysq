@@ -31,7 +31,28 @@ class MemoryNamespace:
         metadata: dict[str, Any] | None = None,
         timestamp: str | None = None,
     ) -> CaptureResult:
-        """Store a memory. Returns processing status and tag feedback."""
+        """Store a memory. Returns processing status and tag feedback.
+
+        SOURCE-CONTENT MEMORIES — when the user shares external material
+        (a URL, a quoted passage, a code snippet, a chat transcript), tag
+        it so the UI can render it as a source:
+
+            tags=["source:knowledge", "source_type:link"]   # URL or article
+            tags=["source:knowledge", "source_type:quote"]  # passage of text
+            tags=["source:knowledge", "source_type:code"]   # code snippet
+            tags=["source:knowledge", "source_type:chat"]   # chat transcript
+
+        Put type-specific fields in ``metadata``:
+            link:  {"url": "...", "title": "..."}
+            quote: {"title": "...", "location": "p.47"}
+            code:  {"language": "python", "location": "src/auth.py:12-40"}
+
+        For binary files / long documents (>10 KB), use
+        ``client.organise.upload_file()`` instead.
+
+        The legacy ``client.knowledge.add()`` namespace was removed in
+        xysq SDK 2.0 — everything is a memory now.
+        """
         payload: dict[str, Any] = {"content": content}
         if context is not None:
             payload["context"] = context

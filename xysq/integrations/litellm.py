@@ -96,23 +96,6 @@ def _dispatch(client: Any, name: str, args: dict[str, Any]) -> Any:
         result = scoped.memory.delete(memory_id=args["memory_id"])
         return {"status": "deleted", **result}
 
-    if name == "xysq_add_knowledge":
-        result = scoped.knowledge.add(
-            type=args["type"],
-            content=args.get("content"),
-            url=args.get("url"),
-            title=args.get("title"),
-        )
-        return result.model_dump()
-
-    if name == "xysq_list_knowledge":
-        items = scoped.knowledge.list(
-            limit=args.get("limit", 20),
-            status=args.get("status"),
-            type=args.get("type"),
-        )
-        return [item.model_dump() for item in items]
-
     return {"error": f"Unknown tool: {name}"}
 
 

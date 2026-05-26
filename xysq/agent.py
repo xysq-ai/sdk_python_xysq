@@ -184,7 +184,7 @@ class XysqAgent:
     """Memory-aware agent backed by any LiteLLM-compatible model.
 
     Uses the **sync** ``Xysq`` client and ``litellm.completion`` (sync).
-    When ``team_id`` is set, all memory/knowledge operations go through
+    When ``team_id`` is set, all memory operations go through
     ``client.team(team_id)``.
 
     Args:
@@ -226,7 +226,7 @@ class XysqAgent:
         self._history: list[dict[str, str]] = []
         self._turn_count: int = 0
 
-        # Resolve the scoped client for memory/knowledge operations
+        # Resolve the scoped client for memory operations
         if team_id is not None:
             self._scoped = client.team(team_id)
         else:
@@ -305,10 +305,6 @@ class XysqAgent:
     def synthesize(self, query: str) -> Any:
         """On-demand synthesize from memories."""
         return self._scoped.memory.synthesize(query, budget=self._surface_budget)
-
-    def add_knowledge(self, type: str, **kwargs: Any) -> Any:
-        """Convenience passthrough to ``knowledge.add()``."""
-        return self._scoped.knowledge.add(type, **kwargs)
 
     def clear_history(self) -> None:
         """Clear the in-session conversation history (memory is unaffected)."""

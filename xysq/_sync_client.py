@@ -14,14 +14,12 @@ import os
 
 from xysq._client import AsyncXysq
 from xysq._team import TeamScope
-from xysq.knowledge import KnowledgeNamespace
 from xysq.memory import MemoryNamespace
 from xysq.organise import OrganiseNamespace
 from xysq.types import (
     CaptureResult,
     FileStatus,
     Folder,
-    KnowledgeSource,
     MemoryItem,
     OrganiseFile,
     StatusResult,
@@ -129,56 +127,6 @@ class _SyncMemory:
         return self._run(self._ns.wait(memory_id, timeout=timeout, interval=interval))
 
 
-class _SyncKnowledge:
-    """Sync wrapper around KnowledgeNamespace."""
-
-    def __init__(self, ns: KnowledgeNamespace, loop: asyncio.AbstractEventLoop) -> None:
-        self._ns = ns
-        self._loop = loop
-
-    def _run(self, coro: Any) -> Any:
-        return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
-
-    def add(
-        self,
-        type: str,
-        content: str | None = None,
-        url: str | None = None,
-        title: str | None = None,
-        location: str | None = None,
-        session_context: str | None = None,
-        confidence: str = "medium",
-    ) -> KnowledgeSource:
-        return self._run(
-            self._ns.add(
-                type,
-                content=content,
-                url=url,
-                title=title,
-                location=location,
-                session_context=session_context,
-                confidence=confidence,
-            )
-        )
-
-    def list(
-        self,
-        limit: int = 20,
-        offset: int = 0,
-        status: str | None = None,
-        type: str | None = None,
-    ) -> list[KnowledgeSource]:
-        return self._run(
-            self._ns.list(limit=limit, offset=offset, status=status, type=type)
-        )
-
-    def status(self, source_id: str) -> StatusResult:
-        return self._run(self._ns.status(source_id))
-
-    def wait(self, source_id: str, timeout: float = 30.0, interval: float = 0.5) -> StatusResult:
-        return self._run(self._ns.wait(source_id, timeout=timeout, interval=interval))
-
-
 class _SyncOrganise:
     """Sync wrapper around OrganiseNamespace."""
 
@@ -253,7 +201,6 @@ class _SyncTeamScope:
 
     def __init__(self, team_scope: TeamScope, loop: asyncio.AbstractEventLoop) -> None:
         self.memory = _SyncMemory(team_scope.memory, loop)
-        self.knowledge = _SyncKnowledge(team_scope.knowledge, loop)
         self.organise = _SyncOrganise(team_scope.organise, loop)
 
 
@@ -291,7 +238,6 @@ class Xysq:
             agent_name=agent_name,
         )
         self.memory = _SyncMemory(self._async_client.memory, self._loop)
-        self.knowledge = _SyncKnowledge(self._async_client.knowledge, self._loop)
         self.organise = _SyncOrganise(self._async_client.organise, self._loop)
 
     def team(self, team_id: str) -> _SyncTeamScope:

@@ -27,19 +27,6 @@ class SynthesizeResult(BaseModel):
     wiki_context_used: bool = False
 
 
-class KnowledgeSource(BaseModel):
-    source_id: str
-    type: str
-    title: str | None = None
-    status: str = "pending"
-    url: str | None = None
-    location: str | None = None
-    confidence: str = "medium"
-    auto_detected: bool = False
-    preview: str | None = None
-    added_at: str | None = None
-
-
 class CaptureResult(BaseModel):
     status: str = "processing"
     memory_id: str = ""

@@ -5,7 +5,6 @@ from __future__ import annotations
 from xysq._config import resolve_api_key, resolve_base_url
 from xysq._http import AsyncHTTPClient
 from xysq._team import TeamScope
-from xysq.knowledge import KnowledgeNamespace
 from xysq.memory import MemoryNamespace
 from xysq.organise import OrganiseNamespace
 
@@ -43,7 +42,6 @@ class AsyncXysq:
             agent_name=agent_name,
         )
         self.memory = MemoryNamespace(self._http)
-        self.knowledge = KnowledgeNamespace(self._http)
         self.organise = OrganiseNamespace(self._http)
 
     def team(self, team_id: str) -> TeamScope:
