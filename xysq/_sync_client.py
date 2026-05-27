@@ -114,17 +114,17 @@ class _SyncMemory:
     ) -> list[MemoryItem]:
         return self._run(self._ns.list(limit=limit, agent_filter=agent_filter))
 
-    def delete(self, memory_id: str) -> dict:
-        return self._run(self._ns.delete(memory_id))
+    def delete(self, document_id: str) -> dict:
+        return self._run(self._ns.delete(document_id))
 
     def tags(self) -> dict:
         return self._run(self._ns.tags())
 
-    def status(self, memory_id: str) -> StatusResult:
-        return self._run(self._ns.status(memory_id))
+    def status(self, document_id: str) -> StatusResult:
+        return self._run(self._ns.status(document_id))
 
-    def wait(self, memory_id: str, timeout: float = 30.0, interval: float = 0.5) -> StatusResult:
-        return self._run(self._ns.wait(memory_id, timeout=timeout, interval=interval))
+    def wait(self, document_id: str, timeout: float = 30.0, interval: float = 0.5) -> StatusResult:
+        return self._run(self._ns.wait(document_id, timeout=timeout, interval=interval))
 
 
 class _SyncOrganise:

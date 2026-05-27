@@ -126,8 +126,8 @@ result = client.memory.capture(
     significance="high",  # "low" | "normal" | "high"
     scope="permanent",    # "permanent" | "session"
 )
-print(result.memory_id)  # unique ID for this memory
-print(result.status)     # "pending" | "processing" | "completed"
+print(result.document_id)  # cluster ID — echo it on subsequent captures in the same topic
+print(result.status)       # "processing" | "completed"
 ```
 
 #### `client.memory.surface(query, *, budget, types, intent, domain, scope, agent_filter)`
@@ -169,25 +169,25 @@ for m in memories:
     print(m.text)
 ```
 
-#### `client.memory.delete(memory_id)`
+#### `client.memory.delete(document_id)`
 
-Delete a memory by ID.
+Delete a memory document (the whole cluster, every unit) by ID.
 
 ```python
-client.memory.delete("mem_abc123")
+client.memory.delete("doc_abc123")
 ```
 
-#### `client.memory.status(memory_id)` / `client.memory.wait(memory_id)`
+#### `client.memory.status(document_id)` / `client.memory.wait(document_id)`
 
 Check or wait for indexing to complete.
 
 ```python
 # Non-blocking check
-status = client.memory.status(result.memory_id)
-print(status.status)  # "pending" | "processing" | "completed" | "failed"
+status = client.memory.status(result.document_id)
+print(status.status)  # "processing" | "completed" | "failed" | "not_found"
 
 # Block until indexed (or timeout)
-final = client.memory.wait(result.memory_id, timeout=30.0)
+final = client.memory.wait(result.document_id, timeout=30.0)
 ```
 
 ---
