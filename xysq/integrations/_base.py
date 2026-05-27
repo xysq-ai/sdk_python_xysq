@@ -139,20 +139,20 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "xysq_delete_memory",
-        "description": "Permanently delete a memory by its ID.",
+        "description": "Permanently delete a memory document by its ID.",
         "parameters": {
             "type": "object",
             "properties": {
-                "memory_id": {
+                "document_id": {
                     "type": "string",
-                    "description": "ID of the memory to delete.",
+                    "description": "ID of the document to delete (from a prior capture response or recall result).",
                 },
                 "team_id": {
                     "type": "string",
                     "description": "Optional team ID for team-scoped operation.",
                 },
             },
-            "required": ["memory_id"],
+            "required": ["document_id"],
         },
     },
 ]

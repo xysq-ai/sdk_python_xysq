@@ -137,16 +137,16 @@ class MemoryNamespace:
         data = await self._http.post(f"{_BASE}/memory/list", json=payload)
         return [self._parse_memory(item) for item in data]
 
-    async def delete(self, memory_id: str) -> dict:
-        """Delete a memory by ID."""
-        payload: dict[str, Any] = {"memory_id": memory_id}
+    async def delete(self, document_id: str) -> dict:
+        """Delete a memory document by ID."""
+        payload: dict[str, Any] = {"document_id": document_id}
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/delete", json=payload)
         return data
 
-    async def status(self, memory_id: str) -> StatusResult:
-        """Check the indexing status of a memory."""
-        payload: dict[str, Any] = {"memory_id": memory_id}
+    async def status(self, document_id: str) -> StatusResult:
+        """Check the indexing status of a memory document."""
+        payload: dict[str, Any] = {"document_id": document_id}
         self._inject_team(payload)
         data = await self._http.post(f"{_BASE}/memory/status", json=payload)
         return StatusResult.model_validate(data)
@@ -159,16 +159,16 @@ class MemoryNamespace:
 
     async def wait(
         self,
-        memory_id: str,
+        document_id: str,
         timeout: float = 30.0,
         interval: float = 0.5,
     ) -> StatusResult:
-        """Poll until memory reaches a terminal status (completed/failed) or timeout."""
+        """Poll until document reaches a terminal status (completed/failed) or timeout."""
         import asyncio
 
         deadline = asyncio.get_event_loop().time() + timeout
         while True:
-            result = await self.status(memory_id)
+            result = await self.status(document_id)
             if result.status in ("completed", "failed", "not_found"):
                 return result
             if asyncio.get_event_loop().time() >= deadline:

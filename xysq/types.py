@@ -29,15 +29,15 @@ class SynthesizeResult(BaseModel):
 
 class CaptureResult(BaseModel):
     status: str = "processing"
-    memory_id: str = ""
+    document_id: str = ""
     applied_tags: list[str] = []
     dropped_tags: list[str] = []
     available_tags: list[str] = []
 
 
 class StatusResult(BaseModel):
-    status: str  # pending | processing | completed | failed | indexed | not_found
-    memory_id: str | None = None
+    status: str  # processing | completed | failed | not_found | busy
+    document_id: str | None = None
     source_id: str | None = None
     error_msg: str | None = None
 

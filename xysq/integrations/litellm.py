@@ -93,7 +93,7 @@ def _dispatch(client: Any, name: str, args: dict[str, Any]) -> Any:
         return [item.model_dump() for item in items]
 
     if name == "xysq_delete_memory":
-        result = scoped.memory.delete(memory_id=args["memory_id"])
+        result = scoped.memory.delete(document_id=args["document_id"])
         return {"status": "deleted", **result}
 
     return {"error": f"Unknown tool: {name}"}
