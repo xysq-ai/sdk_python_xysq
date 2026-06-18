@@ -112,7 +112,13 @@ class MemoryNamespace:
         response_schema: dict[str, Any] | None = None,
         write_back: bool = False,
     ) -> SynthesizeResult:
-        """Synthesise an answer from memories."""
+        """Retrieve memory facts to synthesize from.
+
+        As of xysq backend 2026-06-18 this returns facts plus a convenience
+        digest in ``answer``, it no longer runs server-side synthesis. Your
+        agent should synthesize from the facts. ``response_schema`` is accepted
+        but ignored (deprecated); produce structured output yourself.
+        """
         payload: dict[str, Any] = {"query": query, "budget": budget}
         if response_schema is not None:
             payload["response_schema"] = response_schema
