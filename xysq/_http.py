@@ -28,7 +28,8 @@ _JITTER_FACTOR = 0.25
 class AsyncHTTPClient:
     """Async HTTP client with retry, auth header injection, and error mapping.
 
-    All SDK routes are POST, so only a ``post()`` method is exposed.
+    Exposes ``post()`` and ``get()``; both share one ``_request`` retry loop so
+    the 429/Retry-After and QuotaError handling stays identical per verb.
     """
 
     def __init__(
@@ -55,16 +56,31 @@ class AsyncHTTPClient:
 
     async def post(self, path: str, json: dict[str, Any] | None = None) -> Any:
         """Send a POST request with automatic retry on transient failures."""
+        return await self._request("POST", path, json=json)
+
+    async def get(self, path: str) -> Any:
+        """Send a GET request with automatic retry on transient failures."""
+        return await self._request("GET", path)
+
+    async def _request(
+        self, method: str, path: str, json: dict[str, Any] | None = None,
+    ) -> Any:
+        """The one retry loop for every verb. Keeping GET and POST on the same
+        path means the 429/Retry-After handling and QuotaError mapping can't
+        drift apart per method."""
         import asyncio
 
         last_exc: Exception | None = None
 
         for attempt in range(self._max_retries + 1):
             try:
-                logger.debug("POST %s (attempt %d)", path, attempt + 1)
-                resp = await self._client.post(path, json=json)
+                logger.debug("%s %s (attempt %d)", method, path, attempt + 1)
+                if method == "POST":
+                    resp = await self._client.post(path, json=json)
+                else:
+                    resp = await self._client.get(path)
             except httpx.TimeoutException as exc:
-                logger.warning("Timeout on POST %s (attempt %d)", path, attempt + 1)
+                logger.warning("Timeout on %s %s (attempt %d)", method, path, attempt + 1)
                 last_exc = exc
                 if attempt < self._max_retries:
                     await asyncio.sleep(self._backoff(attempt))
@@ -79,10 +95,8 @@ class AsyncHTTPClient:
 
             # Retryable status — back off and retry
             logger.warning(
-                "Retryable %d on POST %s (attempt %d)",
-                resp.status_code,
-                path,
-                attempt + 1,
+                "Retryable %d on %s %s (attempt %d)",
+                resp.status_code, method, path, attempt + 1,
             )
             last_exc = XysqError(resp.text, status_code=resp.status_code)
 
@@ -102,48 +116,15 @@ class AsyncHTTPClient:
                 if resp.status_code == 429:
                     raise QuotaError(resp.text, status_code=429)
                 raise RetryError(
-                    f"All {self._max_retries + 1} attempts failed for POST {path}. "
+                    f"All {self._max_retries + 1} attempts failed for {method} {path}. "
                     f"Last status: {resp.status_code}.",
                     status_code=resp.status_code,
                 ) from last_exc
 
         # Should not reach here, but satisfy type checkers
         raise RetryError(  # pragma: no cover
-            f"All retries exhausted for POST {path}.",
+            f"All retries exhausted for {method} {path}.",
             status_code=None,
-        )
-
-    async def get(self, path: str) -> Any:
-        """Send a GET request with the same retry policy as post()."""
-        import asyncio
-
-        for attempt in range(self._max_retries + 1):
-            try:
-                logger.debug("GET %s (attempt %d)", path, attempt + 1)
-                resp = await self._client.get(path)
-            except httpx.TimeoutException as exc:
-                if attempt < self._max_retries:
-                    await asyncio.sleep(self._backoff(attempt))
-                    continue
-                raise TimeoutError(
-                    f"Request to {path} timed out after {self._max_retries + 1} attempts.",
-                    status_code=None,
-                ) from exc
-
-            if resp.status_code not in _RETRYABLE_STATUS_CODES:
-                return self._handle_response(resp)
-
-            if attempt < self._max_retries:
-                await asyncio.sleep(self._backoff(attempt))
-            else:
-                raise RetryError(
-                    f"All {self._max_retries + 1} attempts failed for GET {path}. "
-                    f"Last status: {resp.status_code}.",
-                    status_code=resp.status_code,
-                )
-
-        raise RetryError(  # pragma: no cover
-            f"All retries exhausted for GET {path}.", status_code=None,
         )
 
     async def aclose(self) -> None:
