@@ -7,6 +7,7 @@ from xysq._http import AsyncHTTPClient
 from xysq._team import TeamScope
 from xysq.memory import MemoryNamespace
 from xysq.organise import OrganiseNamespace
+from xysq.vaults import VaultsNamespace
 
 
 class AsyncXysq:
@@ -43,6 +44,8 @@ class AsyncXysq:
         )
         self.memory = MemoryNamespace(self._http)
         self.organise = OrganiseNamespace(self._http)
+        # the /sdk vault API -- agent vaults (needs an agent-class key)
+        self.vaults = VaultsNamespace(self._http)
 
     def team(self, team_id: str) -> TeamScope:
         """Return a team-scoped view with auto team_id injection."""
