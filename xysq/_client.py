@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from xysq._config import resolve_api_key, resolve_base_url
 from xysq._http import AsyncHTTPClient
-from xysq._team import TeamScope
-from xysq.memory import MemoryNamespace
-from xysq.organise import OrganiseNamespace
 from xysq.vaults import VaultsNamespace
 
 
@@ -15,14 +12,15 @@ class AsyncXysq:
 
     Usage::
 
-        async with AsyncXysq(api_key="xysq_...") as client:
-            memories = await client.memory.surface("user preferences")
-            await client.memory.capture("User prefers dark mode")
+        async with AsyncXysq(api_key="xysq_agent_...") as client:
+            vault = await client.vaults.create("Support Bot")
+            await client.vaults.push(vault.vault_id, "user: ...\\nagent: ...")
+            hits = await client.vaults.pull(vault.vault_id, "refund policy")
 
     Or without a context manager::
 
-        client = AsyncXysq(api_key="xysq_...")
-        memories = await client.memory.surface("user preferences")
+        client = AsyncXysq(api_key="xysq_agent_...")
+        hits = await client.vaults.pull(vault_id, "user preferences")
         await client.aclose()
     """
 
@@ -42,14 +40,8 @@ class AsyncXysq:
             max_retries=max_retries,
             agent_name=agent_name,
         )
-        self.memory = MemoryNamespace(self._http)
-        self.organise = OrganiseNamespace(self._http)
         # the /sdk vault API -- agent vaults (needs an agent-class key)
         self.vaults = VaultsNamespace(self._http)
-
-    def team(self, team_id: str) -> TeamScope:
-        """Return a team-scoped view with auto team_id injection."""
-        return TeamScope(self._http, team_id=team_id)
 
     async def aclose(self) -> None:
         await self._http.aclose()

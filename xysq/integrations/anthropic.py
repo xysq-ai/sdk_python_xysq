@@ -8,11 +8,12 @@ Usage::
     from xysq import Xysq
     from xysq.integrations.anthropic import XysqAnthropicTools
 
-    xysq_client = Xysq(api_key="xysq_...")
-    tools = XysqAnthropicTools(xysq_client)
+    xysq_client = Xysq(api_key="xysq_agent_...")     # an agent-class key
+    vault = xysq_client.vaults.create("Support Bot")
+    tools = XysqAnthropicTools(xysq_client, vault.vault_id)   # bind the vault
     ac = anthropic.Anthropic(api_key="sk-ant-...")
 
-    messages = [{"role": "user", "content": "What are my coding preferences?"}]
+    messages = [{"role": "user", "content": "what's our refund policy?"}]
 
     while True:
         msg = ac.messages.create(
@@ -41,20 +42,18 @@ from xysq.integrations.litellm import _dispatch
 
 
 class XysqAnthropicTools:
-    """xysq memory tools in Anthropic tool_use format.
+    """xysq vault tools in Anthropic tool_use format.
 
     ``definitions`` -- pass directly to ``anthropic.messages.create(tools=...)``.
     ``execute()``   -- dispatch tool_use blocks returned by Claude.
+
+    The ``vault_id`` is bound here, so Claude decides WHEN to remember/recall,
+    never WHICH vault.
     """
 
-    def __init__(self, client: Any, team_id: str | None = None) -> None:
+    def __init__(self, client: Any, vault_id: str) -> None:
         self._client = client
-        self._team_id = team_id
-        # If team_id provided at construction, use team-scoped client
-        if team_id is not None:
-            self._scoped = client.team(team_id)
-        else:
-            self._scoped = client
+        self._vault_id = vault_id
 
     @property
     def definitions(self) -> list[dict[str, Any]]:
@@ -86,7 +85,7 @@ class XysqAnthropicTools:
             name = getattr(block, "name", None) or block.get("name")
             args = getattr(block, "input", None) or block.get("input", {})
 
-            content = _dispatch(self._client, name, args)
+            content = _dispatch(self._client, self._vault_id, name, args)
             results.append({
                 "type": "tool_result",
                 "tool_use_id": tool_id,
