@@ -1,7 +1,9 @@
-"""LiteLLM adapter for xysq memory tools.
+"""LiteLLM adapter for xysq memory.
 
-Exposes xysq memory as OpenAI-compatible function-calling tool definitions,
-which LiteLLM accepts for any model (GPT, Claude, Gemini, Mistral, etc.).
+Exposes xysq as OpenAI-compatible function-calling tools so YOUR OWN LiteLLM
+loop gets memory -- you keep control of the model, the messages, and the loop;
+xysq is just two tools the model can call (pull context, push context), bound to
+one vault. Works for any LiteLLM model (GPT, Claude, Gemini, Mistral, ...).
 
 Usage::
 
@@ -9,11 +11,11 @@ Usage::
     from xysq.integrations.litellm import XysqLiteLLMTools
     import litellm
 
-    client = Xysq(api_key="xysq_...")
-    tools = XysqLiteLLMTools(client)
+    client = Xysq(api_key="xysq_agent_...")          # an agent-class key
+    vault = client.vaults.create("Support Bot")
+    tools = XysqLiteLLMTools(client, vault.vault_id)  # bind the vault
 
-    messages = [{"role": "user", "content": "What are my coding preferences?"}]
-
+    messages = [{"role": "user", "content": "what's our refund policy?"}]
     while True:
         response = litellm.completion(
             model="gpt-4o",
@@ -22,14 +24,10 @@ Usage::
         )
         msg = response.choices[0].message
         messages.append(msg.model_dump(exclude_none=True))
-
-        tool_calls = msg.tool_calls
-        if not tool_calls:
+        if not msg.tool_calls:
             print(msg.content)
             break
-
-        tool_results = tools.execute(tool_calls)
-        messages.extend(tool_results)
+        messages.extend(tools.execute(msg.tool_calls))
 """
 
 from __future__ import annotations
@@ -40,84 +38,41 @@ from typing import Any
 from xysq.integrations._base import TOOLS
 
 
-def _dispatch(client: Any, name: str, args: dict[str, Any]) -> Any:
-    """Dispatch a tool call to the appropriate sync client method.
+def _dispatch(client: Any, vault_id: str, name: str, args: dict[str, Any]) -> Any:
+    """Dispatch a tool call to the vault API. Module-level so other adapters
+    (Anthropic) reuse it. The vault is bound by the adapter, not the model."""
+    if name == "xysq_pull_context":
+        hits = client.vaults.pull(
+            vault_id, args.get("query"), limit=args.get("limit", 8)
+        )
+        return [h.model_dump() for h in hits]
 
-    If ``team_id`` is present in args, operations are scoped to that team.
-    This function is module-level so other adapters (e.g. Anthropic) can
-    reuse it.
-
-    Args:
-        client: A sync ``Xysq`` client instance.
-        name:   Canonical tool name (e.g. ``"xysq_capture"``).
-        args:   Tool call arguments dict.
-
-    Returns:
-        JSON-serialisable result.
-    """
-    # Resolve team scoping
-    team_id = args.pop("team_id", None)
-    scoped = client.team(team_id) if team_id else client
-
-    if name == "xysq_capture":
-        result = scoped.memory.capture(
-            content=args["content"],
-            context=args.get("context"),
-            tags=args.get("tags"),
-            significance=args.get("significance", "normal"),
-            scope=args.get("scope", "permanent"),
+    if name == "xysq_push_context":
+        result = client.vaults.push(
+            vault_id, args["content"], title=args.get("title")
         )
         return result.model_dump()
-
-    if name == "xysq_surface":
-        items = scoped.memory.surface(
-            query=args["query"],
-            budget=args.get("budget", "mid"),
-            types=args.get("types"),
-            agent_filter=args.get("agent_filter"),
-        )
-        return [item.model_dump() for item in items]
-
-    if name == "xysq_synthesize":
-        result = scoped.memory.synthesize(
-            query=args["query"],
-            budget=args.get("budget", "mid"),
-        )
-        return result.model_dump()
-
-    if name == "xysq_list_memories":
-        items = scoped.memory.list(
-            limit=args.get("limit", 20),
-            agent_filter=args.get("agent_filter"),
-        )
-        return [item.model_dump() for item in items]
-
-    if name == "xysq_delete_memory":
-        result = scoped.memory.delete(document_id=args["document_id"])
-        return {"status": "deleted", **result}
 
     return {"error": f"Unknown tool: {name}"}
 
 
 class XysqLiteLLMTools:
-    """xysq memory tools in OpenAI / LiteLLM function-calling format.
+    """xysq vault tools in OpenAI / LiteLLM function-calling format.
 
-    ``definitions`` -- pass directly to ``litellm.completion(tools=...)``.
-    ``execute()``   -- dispatch tool calls returned by the model.
+    ``definitions`` -- pass to ``litellm.completion(tools=...)``.
+    ``execute()``   -- dispatch tool calls the model returned.
+
+    The ``vault_id`` is bound here, so the model decides WHEN to remember/recall,
+    never WHICH vault.
     """
 
-    def __init__(self, client: Any, team_id: str | None = None) -> None:
+    def __init__(self, client: Any, vault_id: str) -> None:
         self._client = client
-        self._team_id = team_id
-        # If team_id provided at construction, use team-scoped client
-        if team_id is not None:
-            self._scoped = client.team(team_id)
-        else:
-            self._scoped = client
+        self._vault_id = vault_id
 
     @property
     def definitions(self) -> list[dict[str, Any]]:
-        """OpenAI-compatible tool definitions for all xysq tools."""
+        """OpenAI-compatible tool definitions for the xysq vault tools."""
         return [
             {
                 "type": "function",
@@ -131,16 +86,14 @@ class XysqLiteLLMTools:
         ]
 
     def execute(self, tool_calls: list[Any]) -> list[dict[str, Any]]:
-        """Execute a list of tool calls returned by LiteLLM / OpenAI.
-
-        Returns a list of ``{"role": "tool", "tool_call_id": ..., "content": ...}``
-        dicts ready to be appended to the messages list.
-        """
+        """Execute tool calls returned by LiteLLM / OpenAI. Returns
+        ``{"role": "tool", "tool_call_id": ..., "content": ...}`` dicts ready to
+        append to the messages list."""
         results: list[dict[str, Any]] = []
         for call in tool_calls:
             name = call.function.name
             args: dict[str, Any] = json.loads(call.function.arguments or "{}")
-            content = _dispatch(self._client, name, args)
+            content = _dispatch(self._client, self._vault_id, name, args)
             results.append({
                 "role": "tool",
                 "tool_call_id": call.id,
