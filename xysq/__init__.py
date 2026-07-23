@@ -17,8 +17,11 @@ from xysq.types import (
     Folder,
     MemoryItem,
     OrganiseFile,
+    PushResult,
     StatusResult,
     SynthesizeResult,
+    Vault,
+    VaultItem,
 )
 
 __all__ = [
@@ -33,6 +36,9 @@ __all__ = [
     "Folder",
     "OrganiseFile",
     "FileStatus",
+    "Vault",
+    "VaultItem",
+    "PushResult",
     "XysqError",
     "AuthError",
     "NotFoundError",

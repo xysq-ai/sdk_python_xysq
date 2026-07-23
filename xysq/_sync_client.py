@@ -16,14 +16,18 @@ from xysq._client import AsyncXysq
 from xysq._team import TeamScope
 from xysq.memory import MemoryNamespace
 from xysq.organise import OrganiseNamespace
+from xysq.vaults import VaultsNamespace
 from xysq.types import (
     CaptureResult,
     FileStatus,
     Folder,
     MemoryItem,
     OrganiseFile,
+    PushResult,
     StatusResult,
     SynthesizeResult,
+    Vault,
+    VaultItem,
 )
 
 
@@ -196,6 +200,40 @@ class _SyncOrganise:
         )
 
 
+class _SyncVaults:
+    """Sync wrapper around VaultsNamespace (the /sdk vault API)."""
+
+    def __init__(self, ns: VaultsNamespace, loop: asyncio.AbstractEventLoop) -> None:
+        self._ns = ns
+        self._loop = loop
+
+    def _run(self, coro: Any) -> Any:
+        return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
+
+    def create(self, name: str) -> Vault:
+        return self._run(self._ns.create(name))
+
+    def list(self) -> list[Vault]:
+        return self._run(self._ns.list())
+
+    def rename(self, vault_id: str, name: str) -> None:
+        return self._run(self._ns.rename(vault_id, name))
+
+    def delete(self, vault_id: str) -> None:
+        return self._run(self._ns.delete(vault_id))
+
+    def push(
+        self, vault_id: str, content: str, title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> PushResult:
+        return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata))
+
+    def pull(
+        self, vault_id: str, query: str | None = None, limit: int = 10,
+    ) -> list[VaultItem]:
+        return self._run(self._ns.pull(vault_id, query=query, limit=limit))
+
+
 class _SyncTeamScope:
     """Sync wrapper around TeamScope."""
 
@@ -239,6 +277,7 @@ class Xysq:
         )
         self.memory = _SyncMemory(self._async_client.memory, self._loop)
         self.organise = _SyncOrganise(self._async_client.organise, self._loop)
+        self.vaults = _SyncVaults(self._async_client.vaults, self._loop)
 
     def team(self, team_id: str) -> _SyncTeamScope:
         """Return a team-scoped view with auto team_id injection."""

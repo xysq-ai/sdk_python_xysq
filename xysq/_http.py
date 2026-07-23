@@ -113,6 +113,39 @@ class AsyncHTTPClient:
             status_code=None,
         )
 
+    async def get(self, path: str) -> Any:
+        """Send a GET request with the same retry policy as post()."""
+        import asyncio
+
+        for attempt in range(self._max_retries + 1):
+            try:
+                logger.debug("GET %s (attempt %d)", path, attempt + 1)
+                resp = await self._client.get(path)
+            except httpx.TimeoutException as exc:
+                if attempt < self._max_retries:
+                    await asyncio.sleep(self._backoff(attempt))
+                    continue
+                raise TimeoutError(
+                    f"Request to {path} timed out after {self._max_retries + 1} attempts.",
+                    status_code=None,
+                ) from exc
+
+            if resp.status_code not in _RETRYABLE_STATUS_CODES:
+                return self._handle_response(resp)
+
+            if attempt < self._max_retries:
+                await asyncio.sleep(self._backoff(attempt))
+            else:
+                raise RetryError(
+                    f"All {self._max_retries + 1} attempts failed for GET {path}. "
+                    f"Last status: {resp.status_code}.",
+                    status_code=resp.status_code,
+                )
+
+        raise RetryError(  # pragma: no cover
+            f"All retries exhausted for GET {path}.", status_code=None,
+        )
+
     async def aclose(self) -> None:
         await self._client.aclose()
 
