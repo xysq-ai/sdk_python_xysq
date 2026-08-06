@@ -18,6 +18,9 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING, Any
 
+import asyncio
+
+from xysq.exceptions import XysqError
 from xysq.types import ThreadInfo, ThreadWindow, Turn
 
 if TYPE_CHECKING:
@@ -37,15 +40,38 @@ class ThreadsNamespace:
         turn_key: str | None = None,
     ) -> Turn:
         """Append one turn; its allocated ``seq`` comes back. Safe under
-        retries: a ``turn_key`` is minted here (once per LOGICAL turn, before
-        the transport's own retry loop) so a committed insert with a lost
-        response returns the SAME turn instead of duplicating it."""
+        TRANSPORT retries: a ``turn_key`` is minted here (once per logical
+        turn, before the transport's own retry loop), so a committed insert
+        with a lost response returns the SAME turn instead of duplicating it.
+        If YOUR code retries a failed append call, pass the same ``turn_key``
+        on the retry -- a fresh call mints a fresh key and is a new turn.
+
+        A 409 (seq contention on a hot thread) is retried here with the same
+        key: idempotency makes that retry safe, and the transport deliberately
+        does not retry 409s in general."""
         payload: dict[str, Any] = {
             "thread_id": thread_id, "role": role, "content": content,
             "turn_key": turn_key or uuid.uuid4().hex,
         }
-        data = await self._http.post(f"{_BASE}/{vault_id}/threads/append", json=payload)
-        return Turn.model_validate(data.get("turn", {}))
+        last: XysqError | None = None
+        for attempt in range(3):
+            try:
+                data = await self._http.post(
+                    f"{_BASE}/{vault_id}/threads/append", json=payload)
+                break
+            except XysqError as exc:
+                if getattr(exc, "status_code", None) != 409:
+                    raise
+                last = exc
+                await asyncio.sleep(0.2 * (attempt + 1))
+        else:
+            raise last  # type: ignore[misc]
+        turn = data.get("turn")
+        if not turn:
+            # never fabricate a Turn(seq=0): the returned seq is the caller's
+            # write-verification handle (spec 5), a fake zero breaks it
+            raise XysqError("append response carried no turn")
+        return Turn.model_validate(turn)
 
     async def read(
         self, vault_id: str, thread_id: str,

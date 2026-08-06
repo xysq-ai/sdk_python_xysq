@@ -26,6 +26,12 @@ class FakeHTTP:
     async def post(self, path: str, json: dict | None = None) -> dict:
         json = json or {}
         self.calls.append((path, json))
+        # mirror the real route's pydantic gates so the fake fails where the
+        # server fails (review 2026-08-06: the fake accepted empty content)
+        if path.endswith("/threads/append"):
+            if not json.get("content") or len(json["content"]) > 65536:
+                from xysq.exceptions import XysqError
+                raise XysqError("422 content invalid", status_code=422)
         vault_id = path.split("/")[3]
         key = (vault_id, json.get("thread_id", ""))
         turns = self.turns.setdefault(key, [])
@@ -167,6 +173,21 @@ def test_agent_user_turn_is_durable_before_the_model_runs(monkeypatch):
         pass
     turns = http.turns[("v1", "t")]
     assert len(turns) == 1 and turns[0]["content"] == "the question that must survive"
+
+
+def test_empty_assistant_reply_is_not_appended(monkeypatch):
+    """A content-filtered/tool-only completion returns '' -- appending it
+    would 422 on the real server; the agent must skip it."""
+    monkeypatch.setitem(sys.modules, "litellm", _fake_litellm(""))
+    from xysq.agent import XysqAgent
+
+    http = FakeHTTP()
+    agent = XysqAgent(FakeSyncClient(http), "v1", "m", "k", thread_id="t",
+                      recall=False)
+    out = agent.chat("hello")
+    assert out == ""
+    turns = http.turns[("v1", "t")]
+    assert len(turns) == 1 and turns[0]["role"] == "user"
 
 
 def test_clear_never_reuses_seq(monkeypatch):

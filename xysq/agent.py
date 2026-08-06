@@ -53,7 +53,8 @@ class XysqAgent:
                          conversation across processes; omit for a fresh one.
         recall:          pull long-term context before each turn (default ``True``).
         recall_limit:    max context items to pull per turn (default ``8``).
-        history_turns:   how many recent turns to replay to the model (default ``24``).
+        history_turns:   window size for the model: the just-sent message
+                         plus up to N-1 prior turns (default ``24``).
     """
 
     def __init__(
@@ -78,7 +79,7 @@ class XysqAgent:
         self._recall_limit = recall_limit
         self._history_turns = history_turns
 
-    def chat(self, message: str) -> str:
+    def chat(self, message: str, turn_key: str | None = None) -> str:
         """One turn: append the user turn -> pull long-term context -> rebuild
         the window from the SERVER's thread -> call the LLM -> append the
         reply. Long-term capture is automatic (the server promotes and
@@ -93,7 +94,7 @@ class XysqAgent:
         # 1. the user turn is durable BEFORE the model runs: a crash mid-turn
         #    loses the reply, never the question
         self._client.threads.append(
-            self._vault_id, self.thread_id, "user", message)
+            self._vault_id, self.thread_id, "user", message, turn_key=turn_key)
 
         # 2. long-term context (cross-thread, older than this window)
         context_text = ""
@@ -117,9 +118,13 @@ class XysqAgent:
         assistant_text: str = response.choices[0].message.content or ""
 
         # 5. the reply joins the thread; the server's auto-flush promotes the
-        #    conversation into long-term memory turn by turn
-        self._client.threads.append(
-            self._vault_id, self.thread_id, "assistant", assistant_text)
+        #    conversation into long-term memory turn by turn. An EMPTY reply
+        #    (content-filtered, tool-only response) is not appended -- the
+        #    server correctly 422s empty content, and a placeholder would
+        #    pollute the verbatim log
+        if assistant_text:
+            self._client.threads.append(
+                self._vault_id, self.thread_id, "assistant", assistant_text)
 
         return assistant_text
 
