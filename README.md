@@ -49,6 +49,31 @@ from xysq import Xysq
 load_dotenv()
 
 with Xysq() as client:
+    vault = client.vaults.create("Support Bot")
+
+    # working memory: the conversation's turns, server-side, read-your-writes
+    tid = "ticket-4471"
+    client.threads.append(vault.vault_id, tid, "user", "my order is late")
+    client.threads.append(vault.vault_id, tid, "assistant", "Refunded -- 3 days.")
+    window = client.threads.read(vault.vault_id, tid, last_n=12)
+
+    # long-term memory: promoted automatically from threads (or push directly),
+    # then recalled by meaning, across every conversation
+    hits = client.vaults.pull(vault.vault_id, "what happened with the late order")
+```
+
+`client.threads` is the checkpointer -- ordered, verbatim, instantly readable
+turns with automatic promotion into the vault's long-term memory. `append`
+returns the turn's `seq` (your write, verified), reads are always bounded with
+an explicit `truncated` flag, retries can never store a turn twice, and
+`clear()` flushes before it wipes. Full guide: [docs -> Thread-level
+memory](https://docs.xysq.ai/sdk/threads).
+
+<details>
+<summary>Older quickstart (pre-3.x memory API -- being retired)</summary>
+
+```python
+with Xysq() as client:
     # Capture a memory
     client.memory.capture(
         content="User prefers type hints in all Python code",
@@ -66,6 +91,8 @@ with Xysq() as client:
 ```
 
 ---
+
+</details>
 
 ## Table of Contents
 
