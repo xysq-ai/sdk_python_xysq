@@ -12,6 +12,9 @@ from xysq.exceptions import (
     XysqError,
 )
 from xysq.types import (
+    ThreadInfo,
+    ThreadWindow,
+    Turn,
     PushResult,
     Vault,
     VaultItem,
@@ -23,6 +26,12 @@ __all__ = [
     "XysqAgent",
     "Vault",
     "VaultItem",
+    "Turn",
+    "ThreadWindow",
+    "ThreadInfo",
+    "ThreadInfo",
+    "ThreadWindow",
+    "Turn",
     "PushResult",
     "XysqError",
     "AuthError",

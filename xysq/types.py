@@ -33,3 +33,34 @@ class VaultItem(BaseModel):
     page_uuid: str | None = None
     slug: str | None = None
     score: float | None = None
+
+
+class Turn(BaseModel):
+    """One turn of a thread (threads.append / threads.read)."""
+
+    seq: int = 0
+    role: str = "user"          # "user" | "assistant"
+    content: str = ""
+    created_at: str | None = None
+
+
+class ThreadWindow(BaseModel):
+    """threads.read(): the newest turns, oldest-first, ALWAYS bounded.
+
+    ``truncated`` is explicit -- a cut window must never look like a short
+    thread. ``summary`` is reserved (always None today). ``flushed_through``
+    is the last seq already promoted to long-term memory."""
+
+    turns: list[Turn] = []
+    total_turns: int = 0
+    truncated: bool = False
+    summary: str | None = None
+    flushed_through: int = 0
+
+
+class ThreadInfo(BaseModel):
+    """One row of threads.list()."""
+
+    thread_id: str = ""
+    total_turns: int = 0
+    last_turn_at: str | None = None

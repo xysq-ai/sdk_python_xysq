@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from xysq._config import resolve_api_key, resolve_base_url
 from xysq._http import AsyncHTTPClient
+from xysq.threads import ThreadsNamespace
 from xysq.vaults import VaultsNamespace
 
 
@@ -42,6 +43,8 @@ class AsyncXysq:
         )
         # the /sdk vault API -- agent vaults (needs an agent-class key)
         self.vaults = VaultsNamespace(self._http)
+        # the checkpointer: a live conversation's turns, per vault
+        self.threads = ThreadsNamespace(self._http)
 
     async def aclose(self) -> None:
         await self._http.aclose()

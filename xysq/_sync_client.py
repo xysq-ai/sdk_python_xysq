@@ -11,6 +11,7 @@ import threading
 from typing import Any
 
 from xysq._client import AsyncXysq
+from xysq.threads import ThreadsNamespace
 from xysq.vaults import VaultsNamespace
 from xysq.types import (
     PushResult,
@@ -23,6 +24,36 @@ def _start_loop(loop: asyncio.AbstractEventLoop) -> None:
     """Run an event loop forever on a daemon thread."""
     asyncio.set_event_loop(loop)
     loop.run_forever()
+
+
+class _SyncThreads:
+    """Sync wrapper around ThreadsNamespace (the checkpointer)."""
+
+    def __init__(self, ns: ThreadsNamespace, loop: asyncio.AbstractEventLoop) -> None:
+        self._ns = ns
+        self._loop = loop
+
+    def _run(self, coro: Any) -> Any:
+        return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
+
+    def append(self, vault_id: str, thread_id: str, role: str, content: str,
+               turn_key: str | None = None) -> Turn:
+        return self._run(self._ns.append(vault_id, thread_id, role, content,
+                                         turn_key=turn_key))
+
+    def read(self, vault_id: str, thread_id: str, last_n: int | None = None,
+             token_budget: int | None = None) -> ThreadWindow:
+        return self._run(self._ns.read(vault_id, thread_id, last_n=last_n,
+                                       token_budget=token_budget))
+
+    def list(self, vault_id: str) -> list[ThreadInfo]:
+        return self._run(self._ns.list(vault_id))
+
+    def flush(self, vault_id: str, thread_id: str) -> int:
+        return self._run(self._ns.flush(vault_id, thread_id))
+
+    def clear(self, vault_id: str, thread_id: str) -> int:
+        return self._run(self._ns.clear(vault_id, thread_id))
 
 
 class _SyncVaults:
@@ -94,6 +125,7 @@ class Xysq:
             agent_name=agent_name,
         )
         self.vaults = _SyncVaults(self._async_client.vaults, self._loop)
+        self.threads = _SyncThreads(self._async_client.threads, self._loop)
 
     def close(self) -> None:
         """Close the client and shut down the background event loop."""
