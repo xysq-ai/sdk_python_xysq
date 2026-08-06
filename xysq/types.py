@@ -64,3 +64,24 @@ class ThreadInfo(BaseModel):
     thread_id: str = ""
     total_turns: int = 0
     last_turn_at: str | None = None
+
+
+class Tag(BaseModel):
+    """One tag of the user's vocabulary (tags.list / tags.create)."""
+
+    tag_id: str = ""
+    name: str = ""
+    created_by: str = "user"    # "system" (seeded) | "user"
+    applied: int = 0            # live count of sources carrying it
+
+
+class SourceTagsResult(BaseModel):
+    """tags.apply(): what changed and the source's resulting tag set.
+
+    ``unknown`` names were skipped, not created -- the vocabulary is
+    curated; create them first if you meant them."""
+
+    applied: list[str] = []
+    removed: list[str] = []
+    unknown: list[str] = []
+    tags: list[str] = []

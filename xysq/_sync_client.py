@@ -11,10 +11,13 @@ import threading
 from typing import Any
 
 from xysq._client import AsyncXysq
+from xysq.tags import TagsNamespace
 from xysq.threads import ThreadsNamespace
 from xysq.vaults import VaultsNamespace
 from xysq.types import (
     PushResult,
+    SourceTagsResult,
+    Tag,
     Vault,
     VaultItem,
 )
@@ -54,6 +57,34 @@ class _SyncThreads:
 
     def clear(self, vault_id: str, thread_id: str) -> int:
         return self._run(self._ns.clear(vault_id, thread_id))
+
+
+class _SyncTags:
+    """Sync wrapper around TagsNamespace (the tag vocabulary)."""
+
+    def __init__(self, ns: TagsNamespace, loop: asyncio.AbstractEventLoop) -> None:
+        self._ns = ns
+        self._loop = loop
+
+    def _run(self, coro: Any) -> Any:
+        return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
+
+    def list(self) -> list[Tag]:
+        return self._run(self._ns.list())
+
+    def create(self, name: str) -> Tag:
+        return self._run(self._ns.create(name))
+
+    def rename(self, tag_id: str, name: str) -> Tag:
+        return self._run(self._ns.rename(tag_id, name))
+
+    def delete(self, tag_id: str) -> int:
+        return self._run(self._ns.delete(tag_id))
+
+    def apply(self, vault_id: str, source_id: str,
+              add: list[str] | None = None,
+              remove: list[str] | None = None) -> SourceTagsResult:
+        return self._run(self._ns.apply(vault_id, source_id, add=add, remove=remove))
 
 
 class _SyncVaults:
@@ -126,6 +157,7 @@ class Xysq:
         )
         self.vaults = _SyncVaults(self._async_client.vaults, self._loop)
         self.threads = _SyncThreads(self._async_client.threads, self._loop)
+        self.tags = _SyncTags(self._async_client.tags, self._loop)
 
     def close(self) -> None:
         """Close the client and shut down the background event loop."""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from xysq._config import resolve_api_key, resolve_base_url
 from xysq._http import AsyncHTTPClient
+from xysq.tags import TagsNamespace
 from xysq.threads import ThreadsNamespace
 from xysq.vaults import VaultsNamespace
 
@@ -45,6 +46,8 @@ class AsyncXysq:
         self.vaults = VaultsNamespace(self._http)
         # the checkpointer: a live conversation's turns, per vault
         self.threads = ThreadsNamespace(self._http)
+        # the per-user tag vocabulary + apply/detach (tags v2 step 1)
+        self.tags = TagsNamespace(self._http)
 
     async def aclose(self) -> None:
         await self._http.aclose()

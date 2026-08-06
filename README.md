@@ -344,6 +344,21 @@ Set up and manage teams at [app.xysq.ai](https://app.xysq.ai) or see the [Teams 
 
 ---
 
+## Tags
+
+One controlled vocabulary per user, attachable to any captured source. Unknown
+names on apply are echoed back, never auto-created (`out.unknown`), so the
+vocabulary stays deliberate. Tag-scoped recall lands with the server's
+scoped-retrieval wave; the vocabulary you build now is what it will filter on.
+
+```python
+client.tags.create("deploy")
+out = client.tags.apply(vault_id, source_id, add=["deploy"])
+print(out.tags)          # ['deploy']
+```
+
+---
+
 ## Async Client
 
 `AsyncXysq` is the async-native client. The sync `Xysq` client wraps it with a background event loop — both expose identical interfaces.
