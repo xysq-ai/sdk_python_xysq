@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 
 class Vault(BaseModel):
-    """An agent vault -- an independent memory addressed by vault_id."""
+    """A vault -- an independent context graph addressed by vault_id."""
 
     vault_id: str
     name: str
