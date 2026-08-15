@@ -115,10 +115,21 @@ class _SyncVaults:
     ) -> PushResult:
         return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata))
 
+    def list_meta_keys(self, vault_id: str) -> list[str]:
+        return self._run(self._ns.list_meta_keys(vault_id))
+
+    def declare_meta_key(self, vault_id: str, key: str) -> str:
+        return self._run(self._ns.declare_meta_key(vault_id, key))
+
+    def remove_meta_key(self, vault_id: str, key: str) -> bool:
+        return self._run(self._ns.remove_meta_key(vault_id, key))
+
     def pull(
         self, vault_id: str, query: str | None = None, limit: int = 10,
+        filters: dict | None = None,
     ) -> list[VaultItem]:
-        return self._run(self._ns.pull(vault_id, query=query, limit=limit))
+        return self._run(self._ns.pull(vault_id, query=query, limit=limit,
+                                       filters=filters))
 
 
 class Xysq:

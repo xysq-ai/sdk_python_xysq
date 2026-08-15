@@ -77,12 +77,41 @@ class VaultsNamespace:
         return PushResult.model_validate(data)
 
     async def pull(
-        self, vault_id: str, query: str | None = None, limit: int = 10
+        self, vault_id: str, query: str | None = None, limit: int = 10,
+        filters: dict[str, Any] | None = None,
     ) -> list[VaultItem]:
         """Pull ranked context from a vault. Omit ``query`` for the most recent
-        context. Returns the assembled items (the server owns retrieval)."""
+        context. Returns the assembled items (the server owns retrieval).
+
+        ``filters`` narrows the search. v1: ``{"meta": {key: value}}`` over
+        the vault's DECLARED filterable keys (``declare_meta_key``), with
+        match-or-absent semantics: results keep everything matching the value
+        AND everything without the key; only contradicting sources drop."""
         payload: dict[str, Any] = {"limit": limit}
         if query is not None:
             payload["query"] = query
+        if filters is not None:
+            payload["filters"] = filters
         data = await self._http.post(f"{_BASE}/{vault_id}/pull", json=payload)
         return [VaultItem.model_validate(it) for it in data.get("items", [])]
+
+    # -- filterable metadata (declared keys; match-or-absent filters) ---------
+
+    async def list_meta_keys(self, vault_id: str) -> list[str]:
+        """The vault's declared filterable keys -- read before filtering."""
+        data = await self._http.get(f"{_BASE}/{vault_id}/meta-keys")
+        return [k["key"] for k in data.get("keys", [])]
+
+    async def declare_meta_key(self, vault_id: str, key: str) -> str:
+        """Declare a key as filterable. The server indexes existing sources in
+        the background and every future push at capture."""
+        data = await self._http.post(
+            f"{_BASE}/{vault_id}/meta-keys", json={"key": key})
+        return data["key"]
+
+    async def remove_meta_key(self, vault_id: str, key: str) -> bool:
+        """Undeclare: stops indexing and drops the key's index. The metadata
+        on your sources is untouched."""
+        data = await self._http.post(
+            f"{_BASE}/{vault_id}/meta-keys/{key}/delete", json={})
+        return bool(data.get("removed"))
