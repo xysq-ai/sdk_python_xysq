@@ -26,7 +26,7 @@ class FakeHTTP:
             self.seeded = True
 
     async def get(self, path: str):
-        assert path == "/sdk/tags"
+        assert path == "/sdk/projects/p1/tags"
         self._seed()
         return {"tags": [
             {"tag_id": t, "name": n, "created_by": "system",
@@ -35,7 +35,7 @@ class FakeHTTP:
 
     async def post(self, path: str, json: dict | None = None):
         json = json or {}
-        if path == "/sdk/tags":
+        if path == "/sdk/projects/p1/tags":
             self._seed()
             tid = uuid.uuid4().hex
             self.tags[tid] = json["name"].strip().lower()
@@ -73,14 +73,14 @@ class FakeHTTP:
 def test_tags_roundtrip():
     async def run():
         ns = TagsNamespace(FakeHTTP())
-        tags = await ns.list()
+        tags = await ns.list("p1")
         assert isinstance(tags[0], Tag)
         assert {t.name for t in tags} == set(SEED)
 
-        created = await ns.create("Deploy")
+        created = await ns.create("p1", "Deploy")
         assert created.name == "deploy"  # server normalizes
 
-        renamed = await ns.rename(created.tag_id, "deploys")
+        renamed = await ns.rename("p1", created.tag_id, "deploys")
         assert renamed.name == "deploys"
 
         out = await ns.apply("v1", "src1", add=["deploys", "nope"])
@@ -89,7 +89,7 @@ def test_tags_roundtrip():
         assert out.unknown == ["nope"]
         assert out.tags == ["deploys"]
 
-        assert await ns.delete(created.tag_id) == 1
+        assert await ns.delete("p1", created.tag_id) == 1
     asyncio.run(run())
 
 

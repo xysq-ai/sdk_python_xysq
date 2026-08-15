@@ -69,17 +69,20 @@ class _SyncTags:
     def _run(self, coro: Any) -> Any:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
 
-    def list(self) -> list[Tag]:
-        return self._run(self._ns.list())
+    def list(self, project_id: str) -> list[Tag]:
+        return self._run(self._ns.list(project_id))
 
-    def create(self, name: str) -> Tag:
-        return self._run(self._ns.create(name))
+    def create(self, project_id: str, name: str) -> Tag:
+        return self._run(self._ns.create(project_id, name))
 
-    def rename(self, tag_id: str, name: str) -> Tag:
-        return self._run(self._ns.rename(tag_id, name))
+    def rename(self, project_id: str, tag_id: str, name: str) -> Tag:
+        return self._run(self._ns.rename(project_id, tag_id, name))
 
-    def delete(self, tag_id: str) -> int:
-        return self._run(self._ns.delete(tag_id))
+    def delete(self, project_id: str, tag_id: str) -> int:
+        return self._run(self._ns.delete(project_id, tag_id))
+
+    def restore(self, project_id: str, tag_id: str) -> bool:
+        return self._run(self._ns.restore(project_id, tag_id))
 
     def apply(self, vault_id: str, source_id: str,
               add: list[str] | None = None,
