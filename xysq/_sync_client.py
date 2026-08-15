@@ -115,6 +115,12 @@ class _SyncVaults:
     ) -> PushResult:
         return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata))
 
+    def update_source_meta(self, vault_id: str, source_id: str,
+                           set: dict | None = None,
+                           remove: list[str] | None = None) -> dict:
+        return self._run(self._ns.update_source_meta(
+            vault_id, source_id, set=set, remove=remove))
+
     def list_meta_keys(self, vault_id: str) -> list[str]:
         return self._run(self._ns.list_meta_keys(vault_id))
 

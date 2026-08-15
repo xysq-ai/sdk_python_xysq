@@ -83,10 +83,12 @@ class VaultsNamespace:
         """Pull ranked context from a vault. Omit ``query`` for the most recent
         context. Returns the assembled items (the server owns retrieval).
 
-        ``filters`` narrows the search. v1: ``{"meta": {key: value}}`` over
-        the vault's DECLARED filterable keys (``declare_meta_key``), with
-        match-or-absent semantics: results keep everything matching the value
-        AND everything without the key; only contradicting sources drop."""
+        ``filters`` narrows the search, two composable kinds:
+        ``{"tags": ["deploy"]}`` searches ONLY sources you tagged (hard
+        inclusion; unknown names are a 400 listing your vocabulary), and
+        ``{"meta": {key: value}}`` filters by a DECLARED key with
+        match-or-absent semantics: keeps everything matching AND everything
+        without the key; only contradicting sources drop."""
         payload: dict[str, Any] = {"limit": limit}
         if query is not None:
             payload["query"] = query
@@ -115,3 +117,15 @@ class VaultsNamespace:
         data = await self._http.post(
             f"{_BASE}/{vault_id}/meta-keys/{key}/delete", json={})
         return bool(data.get("removed"))
+
+    async def update_source_meta(
+        self, vault_id: str, source_id: str,
+        set: dict[str, Any] | None = None, remove: list[str] | None = None,
+    ) -> dict[str, Any]:
+        """Set/remove DECLARED metadata keys on an EXISTING source -- the
+        after-the-fact twin of ``tags.apply``. Unknown (undeclared) keys are
+        echoed back in ``unknown``, never written; the filter index updates
+        immediately. Returns {applied, removed, unknown}."""
+        return await self._http.post(
+            f"{_BASE}/{vault_id}/sources/{source_id}/meta/update",
+            json={"set": set or {}, "remove": remove or []})
