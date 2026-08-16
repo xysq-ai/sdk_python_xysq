@@ -73,6 +73,7 @@ class Tag(BaseModel):
     name: str = ""
     created_by: str = "user"    # "system" (seeded) | "user"
     applied: int = 0            # live count of sources carrying it
+    archived: bool = False      # archived tags list last; restore() revives
 
 
 class SourceTagsResult(BaseModel):

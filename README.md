@@ -352,7 +352,7 @@ vocabulary stays deliberate. Tag-scoped recall lands with the server's
 scoped-retrieval wave; the vocabulary you build now is what it will filter on.
 
 ```python
-client.tags.create("deploy")
+client.tags.create(project_id, "deploy")
 out = client.tags.apply(vault_id, source_id, add=["deploy"])
 print(out.tags)          # ['deploy']
 ```

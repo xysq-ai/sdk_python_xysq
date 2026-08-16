@@ -46,7 +46,7 @@ class AsyncXysq:
         self.vaults = VaultsNamespace(self._http)
         # the checkpointer: a live conversation's turns, per vault
         self.threads = ThreadsNamespace(self._http)
-        # the per-user tag vocabulary + apply/detach (tags v2 step 1)
+        # project-level tag vocabularies + vault-context apply
         self.tags = TagsNamespace(self._http)
 
     async def aclose(self) -> None:

@@ -1,18 +1,15 @@
-"""Tags namespace -- a controlled vocabulary for organizing sources.
+"""Tags namespace -- PROJECT-level vocabularies for your agents.
 
-One vocabulary per USER, spanning all your vaults: define tags once
-(``client.tags.create``), then attach them to any captured source. The server
-seeds a small starter set on first use; unknown names on apply are echoed
-back, never auto-created (the vocabulary stays curated).
+The SDK manages agent resources: each project carries one shared tag
+vocabulary its agents apply. Personal and team tags live in the app UI;
+agent-global lives at /agents/tags. Deleting archives (sources stay
+tagged; ``restore`` revives); archived tags list last with
+``archived=True``.
 
     async with AsyncXysq(api_key="xysq_agent_...") as client:
-        tags = await client.tags.list()
-        await client.tags.create("deploy")
+        await client.tags.create(project_id, "deploy")
+        tags = await client.tags.list(project_id)
         await client.tags.apply(vault_id, source_id, add=["deploy"])
-
-Names are slugs: 1-30 chars of ``a-z``, ``0-9``, ``-`` (starting alnum);
-the server lowercases and trims for you. Scoped recall by tag (pull
-``filters``) lands with the server's scoped-retrieval wave.
 """
 
 from __future__ import annotations
