@@ -101,7 +101,7 @@ class _SyncVaults:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
 
     def create(self, name: str, project_id: str | None = None) -> Vault:
-        return self._run(self._ns.create(name))
+        return self._run(self._ns.create(name, project_id=project_id))
 
     def list(self) -> list[Vault]:
         return self._run(self._ns.list())

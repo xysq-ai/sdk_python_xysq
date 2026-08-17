@@ -29,3 +29,12 @@ def test_create_passes_project_id():
         standalone = await ns.create("solo")
         assert standalone.project_id is None
     asyncio.run(run())
+
+
+def test_sync_create_forwards_project_id():
+    # the 3.5.1 sync wrapper accepted project_id and silently dropped it;
+    # this pins the forwarding
+    import inspect
+    from xysq import _sync_client
+    src = inspect.getsource(_sync_client)
+    assert "self._ns.create(name, project_id=project_id)" in src
