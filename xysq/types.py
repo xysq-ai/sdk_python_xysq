@@ -17,6 +17,7 @@ class Vault(BaseModel):
     name: str
     kind: str = "agent"
     is_default: bool = False
+    project_id: str | None = None  # set when the vault lives in a project
 
 
 class PushResult(BaseModel):

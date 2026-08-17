@@ -100,7 +100,7 @@ class _SyncVaults:
     def _run(self, coro: Any) -> Any:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
 
-    def create(self, name: str) -> Vault:
+    def create(self, name: str, project_id: str | None = None) -> Vault:
         return self._run(self._ns.create(name))
 
     def list(self) -> list[Vault]:

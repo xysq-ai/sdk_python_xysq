@@ -30,9 +30,12 @@ class VaultsNamespace:
 
     # -- vault CRUD ----------------------------------------------------------
 
-    async def create(self, name: str) -> Vault:
-        """Create a new agent vault. Requires an agent-class API key."""
-        data = await self._http.post(_BASE, json={"name": name})
+    async def create(self, name: str, project_id: str | None = None) -> Vault:
+        """Create a new agent vault. Requires an agent-class API key.
+        Pass ``project_id`` to create it inside a project -- the vault then
+        resolves the project's tag vocabulary on apply and filters."""
+        data = await self._http.post(
+            _BASE, json={"name": name, "project_id": project_id})
         return Vault.model_validate(data)
 
     async def list(self) -> list[Vault]:
