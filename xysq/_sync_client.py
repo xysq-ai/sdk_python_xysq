@@ -100,8 +100,9 @@ class _SyncVaults:
     def _run(self, coro: Any) -> Any:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
 
-    def create(self, name: str, project_id: str | None = None) -> Vault:
-        return self._run(self._ns.create(name, project_id=project_id))
+    def create(self, name: str, project_id: str | None = None,
+               pii_scrub: bool = False) -> Vault:
+        return self._run(self._ns.create(name, project_id=project_id, pii_scrub=pii_scrub))
 
     def list(self) -> list[Vault]:
         return self._run(self._ns.list())
@@ -115,8 +116,10 @@ class _SyncVaults:
     def push(
         self, vault_id: str, content: str, title: str | None = None,
         metadata: dict[str, Any] | None = None,
+        pii: bool | None = None, known_pii: list[str] | None = None,
     ) -> PushResult:
-        return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata))
+        return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata,
+                                        pii=pii, known_pii=known_pii))
 
     def update_source_meta(self, vault_id: str, source_id: str,
                            set: dict | None = None,

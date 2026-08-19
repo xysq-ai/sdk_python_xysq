@@ -18,6 +18,7 @@ class Vault(BaseModel):
     kind: str = "agent"
     is_default: bool = False
     project_id: str | None = None  # set when the vault lives in a project
+    pii_scrub: bool = False  # every push into this vault is scrubbed before storage
 
 
 class PushResult(BaseModel):

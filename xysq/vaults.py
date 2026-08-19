@@ -30,12 +30,19 @@ class VaultsNamespace:
 
     # -- vault CRUD ----------------------------------------------------------
 
-    async def create(self, name: str, project_id: str | None = None) -> Vault:
+    async def create(self, name: str, project_id: str | None = None,
+                      pii_scrub: bool = False) -> Vault:
         """Create a new agent vault. Requires an agent-class API key.
         Pass ``project_id`` to create it inside a project -- the vault then
-        resolves the project's tag vocabulary on apply and filters."""
+        resolves the project's tag vocabulary on apply and filters.
+
+        ``pii_scrub`` makes this vault's default: every push launders content
+        (strips emails, phone numbers, and anything in a push's ``known_pii``)
+        before it's stored, and a push that can't be scrubbed clean gets a
+        422 with nothing stored. Override per push with ``push(..., pii=...)``."""
         data = await self._http.post(
-            _BASE, json={"name": name, "project_id": project_id})
+            _BASE, json={"name": name, "project_id": project_id,
+                         "pii_scrub": pii_scrub})
         return Vault.model_validate(data)
 
     async def list(self) -> list[Vault]:
@@ -60,6 +67,8 @@ class VaultsNamespace:
         content: str,
         title: str | None = None,
         metadata: dict[str, Any] | None = None,
+        pii: bool | None = None,
+        known_pii: list[str] | None = None,
     ) -> PushResult:
         """Push VERBATIM content into a vault. The server distills it into the
         vault's wiki in the background, so this returns immediately.
@@ -70,12 +79,23 @@ class VaultsNamespace:
 
         Do NOT summarize -- the server extracts the details. Group multiple
         pushes from one conversation with a stable ``metadata={"session_id": ...}``
-        so they append to one source instead of fragmenting."""
+        so they append to one source instead of fragmenting.
+
+        ``pii`` overrides the vault's ``pii_scrub`` setting for just this push
+        (``None`` inherits it). When scrubbing is on, content is laundered
+        before storage; a 422 means it could not be scrubbed clean and nothing
+        was stored. ``known_pii`` is a list of names/identifiers to redact even
+        if they don't match a built-in pattern -- used transiently for this
+        scrub only, never stored."""
         payload: dict[str, Any] = {"content": content}
         if title is not None:
             payload["title"] = title
         if metadata is not None:
             payload["metadata"] = metadata
+        if pii is not None:
+            payload["pii"] = pii
+        if known_pii is not None:
+            payload["known_pii"] = known_pii
         data = await self._http.post(f"{_BASE}/{vault_id}/push", json=payload)
         return PushResult.model_validate(data)
 
