@@ -10,7 +10,7 @@
 
 **The official Python SDK for [xysq.ai](https://xysq.ai)**
 
-A consent-first memory layer for AI agents. Give your agents persistent memory across sessions, share context across teams, and build agents that remember.
+The trust layer for AI agents and teams. Give your agents persistent memory across sessions, share context across teams, and build agents that remember.
 
 </div>
 
