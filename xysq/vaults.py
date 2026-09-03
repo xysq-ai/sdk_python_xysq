@@ -120,6 +120,88 @@ class VaultsNamespace:
         data = await self._http.post(f"{_BASE}/{vault_id}/pull", json=payload)
         return [VaultItem.model_validate(it) for it in data.get("items", [])]
 
+    # -- one source: replace its bytes, or remove it -------------------------
+
+    async def replace_source(
+        self,
+        vault_id: str,
+        source_id: str,
+        content: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        pii: bool | None = None,
+        known_pii: list[str] | None = None,
+        expected_content_hash: str | None = None,
+    ) -> PushResult:
+        """Rewrite a source's content UNDER THE SAME ``source_id`` (the ``id``
+        from ``push``). Use this instead of delete-then-push when you own a
+        source that changes -- a questionnaire answer, a policy page, a profile
+        -- because a push mints a NEW id and your stable handle would change on
+        every save.
+
+        ACCEPTED, NOT APPLIED. The new content is stored when this returns, and
+        the vault's wiki catches up on the next distill of that vault. For that
+        window a pull can still cite the statement you just replaced. The
+        returned ``status`` is ``"pending"``, not ``"captured"``, and says so.
+
+        ``metadata`` MERGES into what the source already carries, so keys you
+        don't mention (``source_kind``, say) survive the replace. Use
+        ``update_source_meta(remove=[...])`` to take one away.
+
+        ``expected_content_hash`` is optional. Pass the hash you last saw and a
+        409 tells you somebody else wrote in between; omit it and you overwrite
+        whatever is there. Prior versions are kept server-side either way, so a
+        lost race loses only the newest text.
+
+        ``pii`` and ``known_pii`` behave exactly as they do on ``push``."""
+        payload: dict[str, Any] = {"content": content}
+        if title is not None:
+            payload["title"] = title
+        if metadata is not None:
+            payload["metadata"] = metadata
+        if pii is not None:
+            payload["pii"] = pii
+        if known_pii is not None:
+            payload["known_pii"] = known_pii
+        if expected_content_hash is not None:
+            payload["expected_content_hash"] = expected_content_hash
+        data = await self._http.post(
+            f"{_BASE}/{vault_id}/sources/{source_id}/update", json=payload)
+        return PushResult.model_validate(data)
+
+    async def delete_source(self, vault_id: str, source_id: str) -> bool:
+        """Delete ONE source. IRREVERSIBLE. Returns True if it was there,
+        False if it was already gone (a 404), so a blind retry needs no
+        special case.
+
+        Four things this actually does, plainly:
+
+        1. It removes the source, its search chunks, and every fact the source
+           grounded, along with the lines those facts held up.
+        2. It ALSO retracts facts that were cited to another source as well.
+           A fact is only as grounded as its weakest citation, so the whole
+           fact goes. Those are re-derivable -- the surviving source is still
+           in the vault -- but nothing re-derives them for you, because
+           nothing re-distills a source that did not change.
+        3. It does NOT erase every copy of the words. Page history in the
+           vault's git repo and the distill run log keep them. If you need
+           real erasure, this is not it.
+        4. Deleting a vault's LAST source does not delete the vault. Use
+           ``delete(vault_id)`` for that.
+
+        Needs a key with ``read_write`` or ``admin`` on this vault: a
+        write-only ingest key can push and cannot erase."""
+        from xysq.exceptions import NotFoundError
+        try:
+            await self._http.post(
+                f"{_BASE}/{vault_id}/sources/{source_id}/delete", json={})
+        except NotFoundError:
+            # already gone (or never here). The engine-level work is
+            # idempotent, so a retry after a crashed delete is safe; a
+            # COMPLETED delete answers 404, and that is success from here
+            return False
+        return True
+
     # -- filterable metadata (declared keys; match-or-absent filters) ---------
 
     async def list_meta_keys(self, vault_id: str) -> list[str]:

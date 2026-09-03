@@ -86,3 +86,76 @@ def test_sync_push_forwards_pii_flags():
     from xysq import _sync_client
     src = inspect.getsource(_sync_client)
     assert "pii=pii, known_pii=known_pii" in src
+
+
+# -- one source: replace / delete (3.7.0) ------------------------------------
+
+
+class _SourceHTTP:
+    """Answers the two per-source routes, and can be told to 404 the delete."""
+
+    def __init__(self, *, missing: bool = False):
+        self.sent = None
+        self._missing = missing
+
+    async def post(self, path: str, json: dict | None = None):
+        self.sent = (path, json)
+        if path.endswith("/delete"):
+            if self._missing:
+                from xysq.exceptions import NotFoundError
+                raise NotFoundError("not found", status_code=404)
+            return {"id": "src1", "deleted": True, "retracted_fact_count": 2,
+                    "pages_rewritten": 1, "pages_deleted": 0}
+        return {"status": "pending", "id": "src1"}
+
+
+def test_replace_source_keeps_the_id_and_reports_pending():
+    async def run():
+        http = _SourceHTTP()
+        ns = VaultsNamespace(http)
+        result = await ns.replace_source("v1", "src1", "we ship to the US only")
+        assert isinstance(result, PushResult)
+        assert result.id == "src1", "the caller's stable handle must survive"
+        # pending, not captured: the wiki catches up on the next distill
+        assert result.status == "pending"
+        # an omitted hash sends NO key, rather than an explicit null the server
+        # would have to tell apart from "the hash is literally None"
+        assert http.sent == ("/sdk/vaults/v1/sources/src1/update",
+                             {"content": "we ship to the US only"})
+    asyncio.run(run())
+
+
+def test_replace_source_forwards_every_optional_field():
+    async def run():
+        http = _SourceHTTP()
+        ns = VaultsNamespace(http)
+        await ns.replace_source("v1", "src1", "new text", title="Policy",
+                                metadata={"source_kind": "stated"}, pii=True,
+                                known_pii=["Alice Chen"],
+                                expected_content_hash="abc123")
+        assert http.sent[1] == {
+            "content": "new text", "title": "Policy",
+            "metadata": {"source_kind": "stated"}, "pii": True,
+            "known_pii": ["Alice Chen"], "expected_content_hash": "abc123"}
+    asyncio.run(run())
+
+
+def test_delete_source_is_true_when_it_was_there_and_false_when_gone():
+    async def run():
+        ns = VaultsNamespace(_SourceHTTP())
+        assert await ns.delete_source("v1", "src1") is True
+        # a completed delete answers 404, so a blind retry gets False rather
+        # than an exception it would have to special-case
+        gone = VaultsNamespace(_SourceHTTP(missing=True))
+        assert await gone.delete_source("v1", "src1") is False
+    asyncio.run(run())
+
+
+def test_sync_forwards_the_source_kwargs():
+    # same pin pattern as create/push above: the 3.5.1 sync wrapper silently
+    # dropped a kwarg once, and nothing but a source check catches that
+    import inspect
+    from xysq import _sync_client
+    src = inspect.getsource(_sync_client)
+    assert "expected_content_hash=expected_content_hash" in src
+    assert "self._ns.delete_source(vault_id, source_id)" in src
