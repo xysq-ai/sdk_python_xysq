@@ -120,6 +120,98 @@ class VaultsNamespace:
         data = await self._http.post(f"{_BASE}/{vault_id}/pull", json=payload)
         return [VaultItem.model_validate(it) for it in data.get("items", [])]
 
+    # -- one source: replace its bytes, or remove it -------------------------
+
+    async def replace_source(
+        self,
+        vault_id: str,
+        source_id: str,
+        content: str,
+        title: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        pii: bool | None = None,
+        known_pii: list[str] | None = None,
+        expected_content_hash: str | None = None,
+    ) -> PushResult:
+        """Rewrite a source's content UNDER THE SAME ``source_id`` (the ``id``
+        from ``push``). Use this instead of delete-then-push when you own a
+        source that changes -- a questionnaire answer, a policy page, a profile
+        -- because a push mints a NEW id and your stable handle would change on
+        every save.
+
+        ACCEPTED, NOT APPLIED. The new content is stored when this returns, and
+        the vault's wiki catches up on the next distill of that vault. For that
+        window a pull can still cite the statement you just replaced. The
+        returned ``status`` is ``"pending"``, not ``"captured"``, and says so.
+
+        ``metadata`` MERGES into what the source already carries, so keys you
+        don't mention (``source_kind``, say) survive the replace. Use
+        ``update_source_meta(remove=[...])`` to take one away.
+
+        ``expected_content_hash`` is optional, and today there is nothing to
+        read it FROM: no route hands back a source's hash (``pull`` returns
+        ranked context, not the row), so pass one only if you already hold the
+        server's value. Do not compute it from the text you sent. On a vault
+        with ``pii_scrub`` on, the server scrubs before it hashes, so the
+        stored hash covers text you never see and a self-computed hash 409s
+        every single time. Omit it and you overwrite whatever is there; prior
+        versions are kept server-side either way, so a lost race loses only
+        the newest text.
+
+        ``pii`` and ``known_pii`` behave exactly as they do on ``push``."""
+        payload: dict[str, Any] = {"content": content}
+        if title is not None:
+            payload["title"] = title
+        if metadata is not None:
+            payload["metadata"] = metadata
+        if pii is not None:
+            payload["pii"] = pii
+        if known_pii is not None:
+            payload["known_pii"] = known_pii
+        if expected_content_hash is not None:
+            payload["expected_content_hash"] = expected_content_hash
+        data = await self._http.post(
+            f"{_BASE}/{vault_id}/sources/{source_id}/update", json=payload)
+        return PushResult.model_validate(data)
+
+    async def delete_source(self, vault_id: str, source_id: str) -> bool:
+        """Delete ONE source. IRREVERSIBLE. Returns True.
+
+        A 404 RAISES ``NotFoundError``, and it does not mean "already gone".
+        The server answers 404 for four different situations -- the source is
+        not there, the vault is not there, you hold no role on it, your key
+        carries no grant covering it -- deliberately, so this route cannot be
+        used to probe what exists. Swallowing that into ``False`` reports a
+        typo'd vault_id or a revoked grant as a successful delete, which for a
+        cleanup loop means skipping every deletion and reporting success. If
+        you are retrying a delete you believe completed, catch
+        ``NotFoundError`` yourself: at that point YOU know which of the four it
+        was, and this method does not.
+
+        Four things this actually does, plainly:
+
+        1. It removes the source, its search chunks, and every fact the source
+           grounded, along with the lines those facts held up.
+        2. It ALSO retracts facts that were cited to another source as well.
+           A fact is only as grounded as its weakest citation, so the whole
+           fact goes. Those are re-derivable -- the surviving source is still
+           in the vault -- but nothing re-derives them for you, because
+           nothing re-distills a source that did not change.
+        3. It does NOT erase every copy of the words. Page history in the
+           vault's git repo and the distill run log keep them. If you need
+           real erasure, this is not it.
+        4. Deleting a vault's LAST source does not delete the vault. Use
+           ``delete(vault_id)`` for that.
+
+        Needs a key with ``read_write`` or ``admin`` on this vault: a
+        write-only ingest key can push and cannot erase."""
+        await self._http.post(
+            f"{_BASE}/{vault_id}/sources/{source_id}/delete", json={})
+        # always True. Kept a bool rather than None so `if
+        # vaults.delete_source(...)` still reads, and so the day this grows a
+        # "nothing to do" answer it has somewhere to put it
+        return True
+
     # -- filterable metadata (declared keys; match-or-absent filters) ---------
 
     async def list_meta_keys(self, vault_id: str) -> list[str]:

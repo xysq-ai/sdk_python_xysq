@@ -121,6 +121,20 @@ class _SyncVaults:
         return self._run(self._ns.push(vault_id, content, title=title, metadata=metadata,
                                         pii=pii, known_pii=known_pii))
 
+    def replace_source(
+        self, vault_id: str, source_id: str, content: str,
+        title: str | None = None, metadata: dict[str, Any] | None = None,
+        pii: bool | None = None, known_pii: list[str] | None = None,
+        expected_content_hash: str | None = None,
+    ) -> PushResult:
+        return self._run(self._ns.replace_source(
+            vault_id, source_id, content, title=title, metadata=metadata,
+            pii=pii, known_pii=known_pii,
+            expected_content_hash=expected_content_hash))
+
+    def delete_source(self, vault_id: str, source_id: str) -> bool:
+        return self._run(self._ns.delete_source(vault_id, source_id))
+
     def update_source_meta(self, vault_id: str, source_id: str,
                            set: dict | None = None,
                            remove: list[str] | None = None) -> dict:
