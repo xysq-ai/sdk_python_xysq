@@ -3,6 +3,9 @@ from __future__ import annotations
 
 import asyncio
 
+import pytest
+
+from xysq.exceptions import NotFoundError
 from xysq.types import PushResult, Vault
 from xysq.vaults import VaultsNamespace
 
@@ -140,14 +143,21 @@ def test_replace_source_forwards_every_optional_field():
     asyncio.run(run())
 
 
-def test_delete_source_is_true_when_it_was_there_and_false_when_gone():
+def test_delete_source_does_not_report_a_404_as_success():
+    """CHANGED DELIBERATELY: this used to assert False on a 404.
+
+    The iron wall answers 404 for four different things -- the source is not
+    there, the vault is not there, you hold no role, your key has no grant
+    covering this vault -- so "already gone" is one reading out of four. A
+    cleanup loop over ids with a typo'd vault_id got False every time and
+    concluded it had deleted everything. Let it raise; a caller retrying a
+    delete it believes completed knows which case it is in and can catch."""
     async def run():
         ns = VaultsNamespace(_SourceHTTP())
         assert await ns.delete_source("v1", "src1") is True
-        # a completed delete answers 404, so a blind retry gets False rather
-        # than an exception it would have to special-case
         gone = VaultsNamespace(_SourceHTTP(missing=True))
-        assert await gone.delete_source("v1", "src1") is False
+        with pytest.raises(NotFoundError):
+            await gone.delete_source("v1", "src1")
     asyncio.run(run())
 
 

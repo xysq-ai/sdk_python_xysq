@@ -170,9 +170,18 @@ class VaultsNamespace:
         return PushResult.model_validate(data)
 
     async def delete_source(self, vault_id: str, source_id: str) -> bool:
-        """Delete ONE source. IRREVERSIBLE. Returns True if it was there,
-        False if it was already gone (a 404), so a blind retry needs no
-        special case.
+        """Delete ONE source. IRREVERSIBLE. Returns True.
+
+        A 404 RAISES ``NotFoundError``, and it does not mean "already gone".
+        The server answers 404 for four different situations -- the source is
+        not there, the vault is not there, you hold no role on it, your key
+        carries no grant covering it -- deliberately, so this route cannot be
+        used to probe what exists. Swallowing that into ``False`` reports a
+        typo'd vault_id or a revoked grant as a successful delete, which for a
+        cleanup loop means skipping every deletion and reporting success. If
+        you are retrying a delete you believe completed, catch
+        ``NotFoundError`` yourself: at that point YOU know which of the four it
+        was, and this method does not.
 
         Four things this actually does, plainly:
 
@@ -191,15 +200,11 @@ class VaultsNamespace:
 
         Needs a key with ``read_write`` or ``admin`` on this vault: a
         write-only ingest key can push and cannot erase."""
-        from xysq.exceptions import NotFoundError
-        try:
-            await self._http.post(
-                f"{_BASE}/{vault_id}/sources/{source_id}/delete", json={})
-        except NotFoundError:
-            # already gone (or never here). The engine-level work is
-            # idempotent, so a retry after a crashed delete is safe; a
-            # COMPLETED delete answers 404, and that is success from here
-            return False
+        await self._http.post(
+            f"{_BASE}/{vault_id}/sources/{source_id}/delete", json={})
+        # always True. Kept a bool rather than None so `if
+        # vaults.delete_source(...)` still reads, and so the day this grows a
+        # "nothing to do" answer it has somewhere to put it
         return True
 
     # -- filterable metadata (declared keys; match-or-absent filters) ---------
