@@ -148,10 +148,15 @@ class VaultsNamespace:
         don't mention (``source_kind``, say) survive the replace. Use
         ``update_source_meta(remove=[...])`` to take one away.
 
-        ``expected_content_hash`` is optional. Pass the hash you last saw and a
-        409 tells you somebody else wrote in between; omit it and you overwrite
-        whatever is there. Prior versions are kept server-side either way, so a
-        lost race loses only the newest text.
+        ``expected_content_hash`` is optional, and today there is nothing to
+        read it FROM: no route hands back a source's hash (``pull`` returns
+        ranked context, not the row), so pass one only if you already hold the
+        server's value. Do not compute it from the text you sent. On a vault
+        with ``pii_scrub`` on, the server scrubs before it hashes, so the
+        stored hash covers text you never see and a self-computed hash 409s
+        every single time. Omit it and you overwrite whatever is there; prior
+        versions are kept server-side either way, so a lost race loses only
+        the newest text.
 
         ``pii`` and ``known_pii`` behave exactly as they do on ``push``."""
         payload: dict[str, Any] = {"content": content}
